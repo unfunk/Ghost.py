@@ -145,7 +145,7 @@ class HttpResource(object):
         self.content = content
         if self.content is None:
             # Tries to get back content from cache
-            buffer = cache.data(self.url)
+            buffer = cache.data(QUrl(self.url))
             if buffer is not None:
                 content = buffer.readAll()
                 try:
