@@ -92,5 +92,14 @@ def send_file():
         'foo.tar.gz'), 'r'), headers=h)
 
 
+@app.route('/iframe')
+def iframe():
+    return render_template('iframe.html')
+
+@app.route('/iframe2')
+def iframe2():
+    return render_template('iframe2.html')
+
+
 if __name__ == '__main__':
     app.run()

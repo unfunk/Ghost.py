@@ -245,6 +245,36 @@ class Ghost(object):
     def __del__(self):
         self.exit()
 
+    def switch_to_frame(self, frameName=None):
+        """Change the focus to the indicated frame
+
+        :param frameName: The name of the frame
+        """
+        if frameName is None:
+            self.main_frame.setFocus()
+            return True
+        
+        for frame in self.page.currentFrame().childFrames():
+            if frame.frameName() == frameName:
+                frame.setFocus()
+                print frame.evaluateJavaScript("document.title")
+                return True
+        return False
+    
+    def switch_to_frame_nro(self, nro=-1):
+        """Change the focus to the indicated frame
+
+        :param nro: Number of the frame
+        """
+        if nro == -1:
+            self.main_frame.setFocus()
+        
+        frames = self.page.currentFrame().childFrames()
+        if len(frames) <= (nro + 1):
+            frames[nro].setFocus()
+        
+        return nro is None or len(frames) < nro
+    
     def capture(self, region=None, selector=None,
             format=QImage.Format_ARGB32_Premultiplied):
         """Returns snapshot as QImage.
@@ -331,7 +361,7 @@ class Ghost(object):
 
         :param script: The script to evaluate.
         """
-        return (self.main_frame.evaluateJavaScript("%s" % script),
+        return (self.page.currentFrame().evaluateJavaScript("%s" % script), 
             self._release_last_resources())
 
     def evaluate_js_file(self, path, encoding='utf-8'):

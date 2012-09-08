@@ -248,7 +248,20 @@ class GhostTest(GhostTestCase):
         foo = open(os.path.join(os.path.dirname(__file__), 'static',
         'foo.tar.gz'), 'r').read(1024)
         self.assertEqual(resources[0].content, foo)
+    
+    def test_change_frame(self):
+        page, resources = self.ghost.open("%siframe" % base_url)
+        self.ghost.switch_to_frame("frame2")
+        self.assertEqual(str(self.ghost.evaluate("document.title")[0]), "Title2")
+        
+        self.ghost.switch_to_frame()
+        self.assertEqual(str(self.ghost.evaluate("document.title")[0]), "Title1")
 
-
+        self.ghost.switch_to_frame_nro(0)
+        self.assertEqual(str(self.ghost.evaluate("document.title")[0]), "Title2")
+        
+        self.ghost.switch_to_frame_nro()
+        self.assertEqual(str(self.ghost.evaluate("document.title")[0]), "Title1")
+        
 if __name__ == '__main__':
     unittest.main()
