@@ -162,7 +162,32 @@ class HttpResource(object):
             self.headers[unicode(header)] = unicode(reply.rawHeader(header))
         self._reply = reply
 
-
+class NetworkAccessManager(QNetworkAccessManager):
+    """NetworkAccessManager manages a QNetworkAccessManager. It's
+    crate a internal cache and manage all the request.
+    
+    :param cache_dir: a directory where Ghost is going to put the cache
+    :param cache_size: the Size of the cache in MB. If it's 0 the
+        cache it's automatically disabled. 
+    
+    """
+    
+    def __init__(self, *args, **kwargs):
+        cache_dir = kwargs.pop("cache_dir", "/tmp/ghost.py")
+        cache_size = kwargs.pop("cache_size", 0)
+        
+        super(NetworkAccessManager, self).__init__(*args, **kwargs)
+    
+        #def configCache(self):
+        cache = QNetworkDiskCache()
+        cache.setCacheDirectory(cache_dir)
+        cache.setMaximumCacheSize(cache_size * 1024 * 1024)
+        self.setCache(cache)
+        
+    def createRequest(self, op, request, device=None):
+        request.setAttribute(request.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
+        return super(NetworkAccessManager, self).createRequest(op, request, device)
+    
 class Ghost(object):
     """Ghost manages a QWebPage.
 
@@ -173,6 +198,9 @@ class Ghost(object):
     :param log_level: The optional logging level.
     :param display: A boolean that tells ghost to displays UI.
     :param viewport_size: A tupple that sets initial viewport size.
+    :param cache_dir: a directory where Ghost is going to put the cache
+    :param cache_size: the Size of the cache in MB. If it's 0 the
+        cache it's automatically disabled. 
     :param download_images: Indicate if the browser download or not the images
     """
     _alert = None
@@ -181,9 +209,9 @@ class Ghost(object):
     _upload_file = None
     _app = None
 
-    def __init__(self, user_agent=default_user_agent, wait_timeout=8,
+    def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
-            viewport_size=(800, 600), cache_dir='/tmp/ghost.py',
+            viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
             download_images=False):
         self.http_resources = []
 
@@ -213,6 +241,7 @@ class Ghost(object):
         
         self.page.setForwardUnsupportedContent(True)
         self.page.settings().setAttribute(QtWebKit.QWebSettings.AutoLoadImages, download_images)
+        #self.page.settings().setAttribute(QtWebKit.QWebSettings.OfflineWebApplicationCacheEnabled, True)
         
         self.set_viewport_size(*viewport_size)
 
@@ -220,13 +249,12 @@ class Ghost(object):
         self.page.loadFinished.connect(self._page_loaded)
         self.page.loadStarted.connect(self._page_load_started)
         self.page.unsupportedContent.connect(self._unsupported_content)
-
-        self.manager = self.page.networkAccessManager()
+        
+        self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size)
         self.manager.finished.connect(self._request_ended)
-        # Cache
-        self.cache = QNetworkDiskCache()
-        self.cache.setCacheDirectory(cache_dir)
-        self.manager.setCache(self.cache)
+        self.cache = self.manager.cache()
+        self.page.setNetworkAccessManager(self.manager)
+        
         # Cookie jar
         self.cookie_jar = QNetworkCookieJar()
         self.manager.setCookieJar(self.cookie_jar)
@@ -454,13 +482,14 @@ class Ghost(object):
         except AttributeError:
             raise Exception("Invalid http method %s" % method)
         request = QNetworkRequest(QUrl(address))
-        request.CacheLoadControl(0)
+        request.CacheLoadControl(QNetworkRequest.AlwaysNetwork)
         for header in headers:
             request.setRawHeader(header, headers[header])
         self._auth = auth
         self._auth_attempt = 0  # Avoids reccursion
         
         self.main_frame.load(request, method, body)
+        
         self.loaded = False
         
         return self.wait_for_page_loaded()
@@ -623,11 +652,11 @@ class Ghost(object):
             authenticator.setPassword(password)
             self._auth_attempt += 1
 
-    def _page_loaded(self):
+    def _page_loaded(self, ok):
         """Called back when page is loaded.
         """
-        self.loaded = True
-        self.cache.clear()
+        self.loaded = ok
+        #self.cache.clear()
 
     def _page_load_started(self):
         """Called back when page load started.
