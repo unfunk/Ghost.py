@@ -13,6 +13,7 @@ try:
     from PyQt4 import QtWebKit
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                 QNetworkCookieJar, QNetworkDiskCache
+    from PyQt4 import QtCore
     from PyQt4.QtCore import QSize, QByteArray, QUrl
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
@@ -20,6 +21,7 @@ except ImportError:
         from PySide import QtWebKit
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                     QNetworkCookieJar, QNetworkDiskCache
+        from PySide import QtCore
         from PySide.QtCore import QSize, QByteArray, QUrl
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
@@ -171,6 +173,7 @@ class Ghost(object):
     :param log_level: The optional logging level.
     :param display: A boolean that tells ghost to displays UI.
     :param viewport_size: A tupple that sets initial viewport size.
+    :param download_images: Indicate if the browser download or not the images
     """
     _alert = None
     _confirm_expected = None
@@ -180,7 +183,8 @@ class Ghost(object):
 
     def __init__(self, user_agent=default_user_agent, wait_timeout=8,
             wait_callback=None, log_level=logging.WARNING, display=False,
-            viewport_size=(800, 600), cache_dir='/tmp/ghost.py'):
+            viewport_size=(800, 600), cache_dir='/tmp/ghost.py',
+            download_images=False):
         self.http_resources = []
 
         self.user_agent = user_agent
@@ -206,9 +210,10 @@ class Ghost(object):
         self.page = GhostWebPage(Ghost._app)
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
         QtWebKit.QWebSettings.setObjectCacheCapacities(0, 0, 0)
-
+        
         self.page.setForwardUnsupportedContent(True)
-
+        self.page.settings().setAttribute(QtWebKit.QWebSettings.AutoLoadImages, download_images)
+        
         self.set_viewport_size(*viewport_size)
 
         # Page signals
@@ -257,7 +262,6 @@ class Ghost(object):
         for frame in self.page.currentFrame().childFrames():
             if frame.frameName() == frameName:
                 frame.setFocus()
-                print frame.evaluateJavaScript("document.title")
                 return True
         return False
     
@@ -455,8 +459,10 @@ class Ghost(object):
             request.setRawHeader(header, headers[header])
         self._auth = auth
         self._auth_attempt = 0  # Avoids reccursion
+        
         self.main_frame.load(request, method, body)
         self.loaded = False
+        
         return self.wait_for_page_loaded()
 
     class prompt:
@@ -581,6 +587,7 @@ class Ghost(object):
         resources = self._release_last_resources()
         page = None
         url = self.main_frame.url().toString()
+        
         for resource in resources:
             if url == resource.url:
                 page = resource
