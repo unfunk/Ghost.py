@@ -145,6 +145,10 @@ class HttpResource(object):
     def __init__(self, reply, cache, content=None):
         self.url = reply.url().toString()
         self.content = content
+        # TODO: in some request reply.attribute(QNetworkRequest.SourceIsFromCacheAttribute)
+        # returns None. I'm not sure why is that happening. 
+        is_from_cache = reply.attribute(QNetworkRequest.SourceIsFromCacheAttribute)
+        self.is_from_cache = False if is_from_cache is None else is_from_cache
         if self.content is None:
             # Tries to get back content from cache
             buffer = cache.data(QUrl(self.url))
@@ -178,15 +182,19 @@ class NetworkAccessManager(QNetworkAccessManager):
         
         super(NetworkAccessManager, self).__init__(*args, **kwargs)
     
-        #def configCache(self):
         cache = QNetworkDiskCache()
         cache.setCacheDirectory(cache_dir)
         cache.setMaximumCacheSize(cache_size * 1024 * 1024)
         self.setCache(cache)
         
     def createRequest(self, op, request, device=None):
+        # TODO: We have a problem here. Every request that is sended through
+        # this NetworkAccessManager has the same Cache Policy. It's
+        # Neccesary to move this to the Request or add some different
+        # mechanism here. 
         request.setAttribute(request.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
         return super(NetworkAccessManager, self).createRequest(op, request, device)
+
     
 class Ghost(object):
     """Ghost manages a QWebPage.
@@ -639,6 +647,9 @@ class Ghost(object):
         self.wait_for(lambda: text in self.content,
             'Can\'t find "%s" in current frame' % text)
         return True, self._release_last_resources()
+    
+    def delete_cache(self):
+        self.cache.clear()
 
     def _authenticate(self, mix, authenticator):
         """Called back on basic / proxy http auth.

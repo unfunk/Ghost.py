@@ -262,6 +262,15 @@ class GhostTest(GhostTestCase):
         
         self.ghost.switch_to_frame_nro()
         self.assertEqual(str(self.ghost.evaluate("document.title")[0]), "Title1")
+    
+    def test_cache_enabled(self):
+        page, resources = self.ghost.open("%siframe" % base_url)
+        r = [r for r in resources if "jquery.min.js" in r.url][0]
+        self.assertTrue(not r.is_from_cache)
+        
+        page, resources = self.ghost.open("%siframe" % base_url)
+        r = [r for r in resources if "jquery.min.js" in r.url][0]
+        self.assertTrue(r.is_from_cache)
         
 if __name__ == '__main__':
     unittest.main()
