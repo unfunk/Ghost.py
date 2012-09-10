@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import os, random, hashlib
 
 from flask import Flask, render_template, url_for, redirect, jsonify
 from flask import request, abort, Response, flash
@@ -91,7 +91,6 @@ def send_file():
     return Response(open(os.path.join(os.path.dirname(__file__), 'static',
         'foo.tar.gz'), 'r'), headers=h)
 
-
 @app.route('/iframe')
 def iframe():
     return render_template('iframe.html')
@@ -99,6 +98,18 @@ def iframe():
 @app.route('/iframe2')
 def iframe2():
     return render_template('iframe2.html')
+
+@app.route('/no-cache-js')
+def no_cache_js():
+    h = Headers()
+    h.add('Content-type', 'application/javascript')
+    
+    response = Response(open(os.path.join(os.path.dirname(__file__), 'static',
+        'mootools.js'), 'r'), headers=h)
+    etag = hashlib.sha1(str(random.randint(0,100000))).hexdigest()
+    response.set_etag(etag)
+
+    return response
 
 
 if __name__ == '__main__':
