@@ -10,6 +10,7 @@ from functools import wraps
 try:
     import sip
     sip.setapi('QVariant', 2)
+    
     from PyQt4 import QtWebKit
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                 QNetworkCookieJar, QNetworkDiskCache
@@ -49,6 +50,13 @@ class GhostWebPage(QtWebKit.QWebPage):
     behaviours like alert(), confirm().
     Also intercepts client side console.log().
     """
+    user_agent = ""
+    _windows = []
+    
+    def __init__(self, *args, **kargs):
+        super(GhostWebPage, self).__init__(*args, **kargs)
+        self.windowCloseRequested.connect(self._closeWindow)
+    
     def chooseFile(self, frame, suggested_file=None):
         return Ghost._upload_file
 
@@ -105,7 +113,31 @@ class GhostWebPage(QtWebKit.QWebPage):
 
     def userAgentForUrl(self, url):
         return self.user_agent
-
+    
+    def acceptNavigationRequest(self, frame, request, ttype):
+        self._lastUrl = request.url()
+        return True
+    
+    def createWindow(self, ttype):
+        webView = QtWebKit.QWebView()
+        newWeb = GhostWebPage(Ghost._app)
+                
+        body = QByteArray()
+        try:
+            method = getattr(QNetworkAccessManager, "GetOperation")
+        except AttributeError:
+            raise Exception("Invalid http method %s" % method)
+        request = QNetworkRequest(QUrl(self._lastUrl))
+        request.CacheLoadControl(QNetworkRequest.AlwaysNetwork)
+        
+        newWeb.currentFrame().load(request, method, body)
+        self._windows.append(newWeb)
+        
+        return newWeb
+    
+    def _closeWindow(self):
+        # TODO implement
+        pass
 
 def can_load_page(func):
     """Decorator that specifies if user can expect page loading from
@@ -249,6 +281,8 @@ class Ghost(object):
         
         self.page.setForwardUnsupportedContent(True)
         self.page.settings().setAttribute(QtWebKit.QWebSettings.AutoLoadImages, download_images)
+        self.page.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
+        self.page.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
         #self.page.settings().setAttribute(QtWebKit.QWebSettings.OfflineWebApplicationCacheEnabled, True)
         
         self.set_viewport_size(*viewport_size)
@@ -501,7 +535,15 @@ class Ghost(object):
         self.loaded = False
         
         return self.wait_for_page_loaded()
-
+    
+    def download(self, path, address, **kwards):
+        page, resources = self.open(address, **kwards)
+        
+        with open(path, "wb") as f:
+            f.write(page.content)
+        
+        return page, resources
+        
     class prompt:
         """Statement that tells Ghost how to deal with javascript prompt().
 
