@@ -131,6 +131,7 @@ class GhostWebPage(QtWebKit.QWebPage):
         request.CacheLoadControl(QNetworkRequest.AlwaysNetwork)
         
         newWeb.currentFrame().load(request, method, body)
+        newWeb.setViewportSize(QSize(800, 600))
         self._windows.append(newWeb)
         
         return newWeb
@@ -138,7 +139,14 @@ class GhostWebPage(QtWebKit.QWebPage):
     def _closeWindow(self):
         # TODO implement
         pass
-
+    
+    def switch_to_sub_window(self, index):
+        if len(self._windows) > index:
+            self._windows[index].mainFrame().setFocus()
+            return self._windows[index]                    
+        return None
+        
+        
 def can_load_page(func):
     """Decorator that specifies if user can expect page loading from
     this action. If expect_loading is set to True, ghost will wait
@@ -319,7 +327,13 @@ class Ghost(object):
 
     def __del__(self):
         self.exit()
-
+    
+    def switch_to_sub_window(self, index):
+        page = self.page.switch_to_sub_window(index)
+        import pdb; pdb.set_trace()
+        self.page = page
+        self.main_frame = page.mainFrame()
+        
     def switch_to_frame(self, frameName=None):
         """Change the focus to the indicated frame
 
@@ -358,6 +372,7 @@ class Ghost(object):
         :param selector: A selector targeted the element to crop on.
         :param format: The output image format.
         """
+        import pdb; pdb.set_trace()
         if region is None and selector is not None:
             region = self.region_for_selector(selector)
         if region:
