@@ -499,7 +499,7 @@ class Ghost(object):
         """Exits application and relateds."""
         if self.display:
             self.webview.close()
-        Ghost._app.exit()
+        Ghost._app.quit()
         del self.manager
         del self.page
         del self.main_frame
