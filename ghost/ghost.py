@@ -15,7 +15,7 @@ try:
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                 QNetworkCookieJar, QNetworkDiskCache
     from PyQt4 import QtCore
-    from PyQt4.QtCore import QSize, QByteArray, QUrl
+    from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
     try:
@@ -23,7 +23,7 @@ except ImportError:
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                     QNetworkCookieJar, QNetworkDiskCache
         from PySide import QtCore
-        from PySide.QtCore import QSize, QByteArray, QUrl
+        from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
@@ -52,11 +52,16 @@ class GhostWebPage(QtWebKit.QWebPage):
     """
     user_agent = ""
     _windows = []
+    _main_window = None
+    removeWindowFromList = pyqtSignal(object)
     
     def __init__(self, *args, **kargs):
+        self._main_window = kargs.pop("main_window", None)
         super(GhostWebPage, self).__init__(*args, **kargs)
+        
         self.windowCloseRequested.connect(self._closeWindow)
-    
+        self.removeWindowFromList.connect(self._removeWindowFromList)
+        
     def chooseFile(self, frame, suggested_file=None):
         return Ghost._upload_file
 
@@ -120,7 +125,7 @@ class GhostWebPage(QtWebKit.QWebPage):
     
     def createWindow(self, ttype):
         webView = QtWebKit.QWebView()
-        newWeb = GhostWebPage(Ghost._app)
+        newWeb = GhostWebPage(Ghost._app, main_window=self)
                 
         body = QByteArray()
         try:
@@ -132,13 +137,18 @@ class GhostWebPage(QtWebKit.QWebPage):
         
         newWeb.currentFrame().load(request, method, body)
         newWeb.setViewportSize(QSize(800, 600))
+        
         self._windows.append(newWeb)
         
         return newWeb
     
     def _closeWindow(self):
-        # TODO implement
-        pass
+        if self._main_window is not None:
+            self._main_window.removeWindowFromList.emit(self)
+    
+    @pyqtSlot(object)
+    def _removeWindowFromList(self, windowClosed):
+        self._windows.remove(windowClosed)
     
     def switch_to_sub_window(self, index):
         """Change the focus to the sub window (popup)
@@ -339,8 +349,11 @@ class Ghost(object):
         :param nro: Number of the window
         """
         page = self.page.switch_to_sub_window(index)
-        self.page = page
-        self.main_frame = page.mainFrame()
+        if page is not None:
+            self.page = page
+            self.main_frame = page.mainFrame()
+        
+        return page
     
     def switch_to_main_window(self):
         """Change the focus to the main windows

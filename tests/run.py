@@ -279,8 +279,10 @@ class GhostTest(GhostTestCase):
         self.ghost.switch_to_sub_window(0)
         self.ghost.wait_for(lambda: self.ghost.evaluate("document.title")[0] == "Title2", 5000)
         self.assertEqual(self.ghost.evaluate("document.title")[0], "Title2")
+        self.ghost.evaluate("window.close()")
         self.ghost.switch_to_main_window()
         self.assertEqual(self.ghost.evaluate("document.title")[0], "Title1")
+        self.assertTrue(self.ghost.switch_to_sub_window(0) is None)
         
         
 if __name__ == '__main__':
