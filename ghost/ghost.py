@@ -141,6 +141,10 @@ class GhostWebPage(QtWebKit.QWebPage):
         pass
     
     def switch_to_sub_window(self, index):
+        """Change the focus to the sub window (popup)
+        :param index: The index of the window, in the order that the
+            window was opened
+        """
         if len(self._windows) > index:
             self._windows[index].mainFrame().setFocus()
             return self._windows[index]                    
@@ -317,7 +321,8 @@ class Ghost(object):
             .connect(self._authenticate)
 
         self.main_frame = self.page.mainFrame()
-
+        self.main_page = self.page
+        
         logger.setLevel(log_level)
 
         if self.display:
@@ -329,10 +334,19 @@ class Ghost(object):
         self.exit()
     
     def switch_to_sub_window(self, index):
+        """Change the focus to the indicated window
+
+        :param nro: Number of the window
+        """
         page = self.page.switch_to_sub_window(index)
-        import pdb; pdb.set_trace()
         self.page = page
         self.main_frame = page.mainFrame()
+    
+    def switch_to_main_window(self):
+        """Change the focus to the main windows
+        """
+        self.page = self.main_page
+        self.main_frame = self.page
         
     def switch_to_frame(self, frameName=None):
         """Change the focus to the indicated frame
@@ -372,7 +386,6 @@ class Ghost(object):
         :param selector: A selector targeted the element to crop on.
         :param format: The output image format.
         """
-        import pdb; pdb.set_trace()
         if region is None and selector is not None:
             region = self.region_for_selector(selector)
         if region:

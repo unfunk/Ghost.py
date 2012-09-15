@@ -271,6 +271,17 @@ class GhostTest(GhostTestCase):
         page, resources = self.ghost.open("%siframe" % base_url)
         r = [r for r in resources if "jquery.min.js" in r.url][0]
         self.assertTrue(r.is_from_cache)
+    
+    def test_windows_switch(self):
+        page, resources = self.ghost.open("%siframe" % base_url)
+        self.assertEqual(self.ghost.evaluate("document.title")[0], "Title1")
+        self.ghost.click("#newWindow")
+        self.ghost.switch_to_sub_window(0)
+        self.ghost.wait_for(lambda: self.ghost.evaluate("document.title")[0] == "Title2", 5000)
+        self.assertEqual(self.ghost.evaluate("document.title")[0], "Title2")
+        self.ghost.switch_to_main_window()
+        self.assertEqual(self.ghost.evaluate("document.title")[0], "Title1")
+        
         
 if __name__ == '__main__':
     unittest.main()
