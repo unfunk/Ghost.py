@@ -6,6 +6,7 @@ import codecs
 import json
 import logging
 import subprocess
+
 from functools import wraps
 try:
     import sip
@@ -13,7 +14,7 @@ try:
     
     from PyQt4 import QtWebKit
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
-                                QNetworkCookieJar, QNetworkDiskCache
+                                QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
     from PyQt4 import QtCore
     from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal
     from PyQt4.QtGui import QApplication, QImage, QPainter
@@ -21,7 +22,7 @@ except ImportError:
     try:
         from PySide import QtWebKit
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
-                                    QNetworkCookieJar, QNetworkDiskCache
+                                    QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
         from PySide import QtCore
         from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal
         from PySide.QtGui import QApplication, QImage, QPainter
@@ -226,13 +227,16 @@ class NetworkAccessManager(QNetworkAccessManager):
     
     :param cache_dir: a directory where Ghost is going to put the cache
     :param cache_size: the Size of the cache in MB. If it's 0 the
-        cache it's automatically disabled. 
+        cache it's automatically disabled.
+    :param prevent_download: A List of extensions of the files that you want
+        to prevent from downloading
     
     """
     
     def __init__(self, *args, **kwargs):
         cache_dir = kwargs.pop("cache_dir", "/tmp/ghost.py")
         cache_size = kwargs.pop("cache_size", 0)
+        self._prevent_download = kwargs.pop("prevent_download", [])
         
         super(NetworkAccessManager, self).__init__(*args, **kwargs)
     
@@ -242,13 +246,18 @@ class NetworkAccessManager(QNetworkAccessManager):
         self.setCache(cache)
         
     def createRequest(self, op, request, device=None):
-        # TODO: We have a problem here. Every request that is sended through
+        # FIXME: We have a problem here. Every request that is sended through
         # this NetworkAccessManager has the same Cache Policy. It's
         # Neccesary to move this to the Request or add some different
-        # mechanism here. 
+        # mechanism here.
+        
         request.setAttribute(request.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
+        #FIXME: add regular expressions to avoid the loop
+        for ext in self._prevent_download:
+            if unicode(request.url().toString()).endswith(ext):
+                return super(NetworkAccessManager, self).createRequest(op, QNetworkRequest(QUrl()), device)
+        
         return super(NetworkAccessManager, self).createRequest(op, request, device)
-
     
 class Ghost(object):
     """Ghost manages a QWebPage.
@@ -264,6 +273,8 @@ class Ghost(object):
     :param cache_size: the Size of the cache in MB. If it's 0 the
         cache it's automatically disabled. 
     :param download_images: Indicate if the browser download or not the images
+    :param prevent_download: A List of extensions of the files that you want
+        to prevent from downloading
     """
     _alert = None
     _confirm_expected = None
@@ -274,7 +285,7 @@ class Ghost(object):
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
-            download_images=False):
+            download_images=False, prevent_download=[]):
         self.http_resources = []
 
         self.user_agent = user_agent
@@ -312,9 +323,11 @@ class Ghost(object):
         # Page signals
         self.page.loadFinished.connect(self._page_loaded)
         self.page.loadStarted.connect(self._page_load_started)
+        self.page.loadProgress.connect(self._page_load_progress)
         self.page.unsupportedContent.connect(self._unsupported_content)
         
-        self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size)
+        self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size,
+                                            prevent_download=prevent_download)
         self.manager.finished.connect(self._request_ended)
         self.cache = self.manager.cache()
         self.page.setNetworkAccessManager(self.manager)
@@ -745,7 +758,10 @@ class Ghost(object):
             authenticator.setUser(username)
             authenticator.setPassword(password)
             self._auth_attempt += 1
-
+    
+    def _page_load_progress(self, progress):
+        pass
+        
     def _page_loaded(self, ok):
         """Called back when page is loaded.
         """
