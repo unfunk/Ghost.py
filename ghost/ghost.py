@@ -258,7 +258,23 @@ class NetworkAccessManager(QNetworkAccessManager):
                 return super(NetworkAccessManager, self).createRequest(op, QNetworkRequest(QUrl()), device)
         
         return super(NetworkAccessManager, self).createRequest(op, request, device)
+
+class GhostInit(QtCore.QObject):  
+    """This class inject the DomReady Script in order to
+        detect when the DOM is Ready
+    """
+    dom_is_ready = pyqtSignal(bool)
     
+    emit_on_ready_event = False
+    
+    @QtCore.pyqtSlot(QtCore.QObject)  
+    def is_ready(self, frame):
+        if True:#self.emit_on_ready_event:
+            Logger.log("DomReady")
+            print "Dom ready"
+            print frame.toHtml()
+            self.dom_is_ready.emit(True)
+        
 class Ghost(object):
     """Ghost manages a QWebPage.
 
@@ -309,6 +325,9 @@ class Ghost(object):
             Ghost._app = QApplication.instance() or QApplication(['ghost'])
 
         self.page = GhostWebPage(Ghost._app)
+        
+        self.ghostInit =  GhostInit()
+        
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
         QtWebKit.QWebSettings.setObjectCacheCapacities(0, 0, 0)
         
@@ -321,11 +340,11 @@ class Ghost(object):
         self.set_viewport_size(*viewport_size)
 
         # Page signals
+        self.page.frameCreated.connect(self._frame_created)
         self.page.loadFinished.connect(self._page_loaded)
         self.page.loadStarted.connect(self._page_load_started)
         self.page.loadProgress.connect(self._page_load_progress)
         self.page.unsupportedContent.connect(self._unsupported_content)
-        
         self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size,
                                             prevent_download=prevent_download)
         self.manager.finished.connect(self._request_ended)
@@ -356,6 +375,11 @@ class Ghost(object):
     def __del__(self):
         self.exit()
     
+    def _insert_dom_ready_code(self):
+        self.page.mainFrame().addToJavaScriptWindowObject("GhostInit", self.ghostInit);
+        self.page.mainFrame().addToJavaScriptWindowObject("ghost_frame", self.page.mainFrame());
+        self.evaluate_js_file(os.path.join(os.path.dirname(__file__), 'domready.js'))
+        
     def switch_to_sub_window(self, index):
         """Change the focus to the indicated window
 
@@ -562,15 +586,28 @@ class Ghost(object):
         except:
             raise Exception("no webview to close")
 
-    def open(self, address, method='get', headers={}, auth=None):
+    def open(self, address, method='get', headers={}, auth=None,
+            wait_onload_event=True):
         """Opens a web page.
 
         :param address: The resource URL.
         :param method: The Http method.
         :param headers: An optional dict of extra request hearders.
         :param auth: An optional tupple of HTTP auth (username, password).
+        :param wait_onload_event: If it's set to True waits until the OnLoad event from
+            the main page is fired. Otherwise wait until the Dom is ready.
         :return: Page resource, All loaded resources.
         """
+        """
+        if not wait_onload_event:
+            print "connect"
+            self.ghostInit.dom_is_ready.connect(self._page_loaded)
+        else:
+            print "disconnect"
+            self.ghostInit.dom_is_ready.diconnect(self._page_loaded)
+        """
+        #self.ghostInit.emit_on_ready_event = not wait_onload_event
+        
         body = QByteArray()
         try:
             method = getattr(QNetworkAccessManager,
@@ -765,12 +802,16 @@ class Ghost(object):
     def _page_loaded(self, ok):
         """Called back when page is loaded.
         """
+        print "load ended"
+        #print unicode(self.page.currentFrame().toHtml()).encode("utf-8")
         self.loaded = ok
         #self.cache.clear()
 
     def _page_load_started(self):
         """Called back when page load started.
         """
+        print "load started"
+        #self._insert_dom_ready_code()
         self.loaded = False
 
     def _release_last_resources(self):
@@ -799,3 +840,8 @@ class Ghost(object):
         if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
             self.http_resources.append(HttpResource(reply, self.cache,
                 reply.readAll()))
+            
+            
+    def _frame_created(self, frame):
+        print "frame created"
+        print frame.tohtml()
