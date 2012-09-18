@@ -297,7 +297,7 @@ class Ghost(object):
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
-            download_images=False, prevent_download=[]):
+            download_images=True, prevent_download=[]):
         self.http_resources = []
 
         self.user_agent = user_agent
@@ -795,8 +795,9 @@ class Ghost(object):
     def _page_loaded(self, ok):
         """Called back when page is loaded.
         """
-        self.loaded = ok
-        #self.cache.clear()
+        # FIXME: Check why ok == False when we are trying to load
+        # unsupported content
+        self.loaded = True
 
     def _page_load_started(self):
         """Called back when page load started.
