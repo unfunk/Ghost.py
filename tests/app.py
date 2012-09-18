@@ -99,6 +99,10 @@ def iframe():
 def iframe2():
     return render_template('iframe2.html')
 
+@app.route('/local_resource')
+def local_resource():
+    return render_template('local_resource.html')
+
 @app.route('/no-cache-js')
 def no_cache_js():
     h = Headers()
