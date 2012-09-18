@@ -284,6 +284,24 @@ class GhostTest(GhostTestCase):
         self.assertEqual(self.ghost.evaluate("document.title")[0], "Title1")
         self.assertTrue(self.ghost.switch_to_sub_window(0) is None)
         
+    def test_prevent_download(self):
+        page, resources = self.ghost_prevent_download.open("%simage" % base_url)
+        self.assertEqual(len(resources), 1)
+        
+        page, resources = self.ghost.open("%simage" % base_url)
+        self.assertEqual(len(resources), 2)
+    
+    def test_fire_on_loaded(self):
+        page, resources = self.ghost.open(
+            "%slocal_resource" % base_url,
+            wait_onload_event=True)
+        
+        self.assertEqual(len(resources), 2)
+        
+        page, resources = self.ghost.open(
+            "%slocal_resource" % base_url,
+            wait_onload_event=False)
+        self.assertEqual(len(resources), 1)
         
 if __name__ == '__main__':
     unittest.main()

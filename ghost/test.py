@@ -43,6 +43,15 @@ class BaseGhostTestCase(TestCase):
                 log_level=cls.log_level,
                 cache_dir="/tmp/ghost.py",
                 cache_size=10)
+            
+            cls.ghost_prevent_download = Ghost(display=cls.display,
+                prevent_download=["jpg"],
+                wait_timeout=cls.wait_timeout,
+                viewport_size=cls.viewport_size,
+                log_level=cls.log_level,
+                cache_dir="/tmp/ghost.py",
+                cache_size=10)
+            
         return super(BaseGhostTestCase, cls).__new__(cls, *args, **kwargs)
 
     def __call__(self, result=None):
@@ -58,6 +67,8 @@ class BaseGhostTestCase(TestCase):
         """Deletes ghost cookies, cache and hide UI if needed."""
         self.ghost.delete_cookies()
         self.ghost.delete_cache()
+        self.ghost_prevent_download.delete_cookies()
+        self.ghost_prevent_download.delete_cache()
         if self.display:
             self.ghost.hide()
 

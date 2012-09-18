@@ -6,6 +6,7 @@ import codecs
 import json
 import logging
 import subprocess
+
 from functools import wraps
 try:
     import sip
@@ -13,17 +14,17 @@ try:
     
     from PyQt4 import QtWebKit
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
-                                QNetworkCookieJar, QNetworkDiskCache
+                                QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
     from PyQt4 import QtCore
-    from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal
+    from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
     try:
         from PySide import QtWebKit
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
-                                    QNetworkCookieJar, QNetworkDiskCache
+                                    QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
         from PySide import QtCore
-        from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal
+        from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
@@ -226,13 +227,16 @@ class NetworkAccessManager(QNetworkAccessManager):
     
     :param cache_dir: a directory where Ghost is going to put the cache
     :param cache_size: the Size of the cache in MB. If it's 0 the
-        cache it's automatically disabled. 
+        cache it's automatically disabled.
+    :param prevent_download: A List of extensions of the files that you want
+        to prevent from downloading
     
     """
     
     def __init__(self, *args, **kwargs):
         cache_dir = kwargs.pop("cache_dir", "/tmp/ghost.py")
         cache_size = kwargs.pop("cache_size", 0)
+        self._prevent_download = kwargs.pop("prevent_download", [])
         
         super(NetworkAccessManager, self).__init__(*args, **kwargs)
     
@@ -242,14 +246,31 @@ class NetworkAccessManager(QNetworkAccessManager):
         self.setCache(cache)
         
     def createRequest(self, op, request, device=None):
-        # TODO: We have a problem here. Every request that is sended through
+        # FIXME: We have a problem here. Every request that is sended through
         # this NetworkAccessManager has the same Cache Policy. It's
         # Neccesary to move this to the Request or add some different
-        # mechanism here. 
+        # mechanism here.
+        
         request.setAttribute(request.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
+        #FIXME: add regular expressions to avoid the loop
+        #FIXME: It would be nice to use content type instead of the extension
+        for ext in self._prevent_download:
+            if unicode(request.url().toString()).endswith(ext):
+                return super(NetworkAccessManager, self).createRequest(op, QNetworkRequest(QUrl()), device)
+        
         return super(NetworkAccessManager, self).createRequest(op, request, device)
 
+class GhostInit(QtCore.QObject):  
+    """This class inject the DomReady Script in order to
+        detect when the DOM is Ready
+    """
+    dom_is_ready = pyqtSignal(bool)
     
+    @QtCore.pyqtSlot()  
+    def is_ready(self):
+        Logger.log("Firing Dom Ready Signal")
+        self.dom_is_ready.emit(True)
+        
 class Ghost(object):
     """Ghost manages a QWebPage.
 
@@ -264,6 +285,8 @@ class Ghost(object):
     :param cache_size: the Size of the cache in MB. If it's 0 the
         cache it's automatically disabled. 
     :param download_images: Indicate if the browser download or not the images
+    :param prevent_download: A List of extensions of the files that you want
+        to prevent from downloading
     """
     _alert = None
     _confirm_expected = None
@@ -274,7 +297,7 @@ class Ghost(object):
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
-            download_images=False):
+            download_images=True, prevent_download=[]):
         self.http_resources = []
 
         self.user_agent = user_agent
@@ -298,6 +321,9 @@ class Ghost(object):
             Ghost._app = QApplication.instance() or QApplication(['ghost'])
 
         self.page = GhostWebPage(Ghost._app)
+        # Internal library object
+        self.ghostInit =  GhostInit()
+        
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
         QtWebKit.QWebSettings.setObjectCacheCapacities(0, 0, 0)
         
@@ -312,9 +338,10 @@ class Ghost(object):
         # Page signals
         self.page.loadFinished.connect(self._page_loaded)
         self.page.loadStarted.connect(self._page_load_started)
+        self.page.loadProgress.connect(self._page_load_progress)
         self.page.unsupportedContent.connect(self._unsupported_content)
-        
-        self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size)
+        self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size,
+                                            prevent_download=prevent_download)
         self.manager.finished.connect(self._request_ended)
         self.cache = self.manager.cache()
         self.page.setNetworkAccessManager(self.manager)
@@ -343,6 +370,11 @@ class Ghost(object):
     def __del__(self):
         self.exit()
     
+    def _insert_dom_ready_code(self):
+        self.page.mainFrame().addToJavaScriptWindowObject("GhostInit", self.ghostInit);
+        #self.page.mainFrame().addToJavaScriptWindowObject("ghost_frame", self.page.mainFrame());
+        self.evaluate_js_file(os.path.join(os.path.dirname(__file__), 'domready.js'))
+        
     def switch_to_sub_window(self, index):
         """Change the focus to the indicated window
 
@@ -549,15 +581,27 @@ class Ghost(object):
         except:
             raise Exception("no webview to close")
 
-    def open(self, address, method='get', headers={}, auth=None):
+    def open(self, address, method='get', headers={}, auth=None,
+            wait_onload_event=True):
         """Opens a web page.
 
         :param address: The resource URL.
         :param method: The Http method.
         :param headers: An optional dict of extra request hearders.
         :param auth: An optional tupple of HTTP auth (username, password).
+        :param wait_onload_event: If it's set to True waits until the OnLoad event from
+            the main page is fired. Otherwise wait until the Dom is ready.
         :return: Page resource, All loaded resources.
         """
+        if not wait_onload_event:
+            if self.ghostInit.receivers(SIGNAL("dom_is_ready(bool)")) == 0:
+                self.ghostInit.dom_is_ready.connect(self._page_loaded)
+            Logger.log("Waiting until OnReady event is fired")
+        else:
+            if self.ghostInit.receivers(SIGNAL("dom_is_ready(bool)")) > 0:
+                self.ghostInit.dom_is_ready.disconnect(self._page_loaded)
+            Logger.log("Waiting until OnLoad event is fired")
+        
         body = QByteArray()
         try:
             method = getattr(QNetworkAccessManager,
@@ -574,7 +618,6 @@ class Ghost(object):
         self.main_frame.load(request, method, body)
         
         self.loaded = False
-        
         return self.wait_for_page_loaded()
     
     def download(self, path, address, **kwards):
@@ -745,12 +788,16 @@ class Ghost(object):
             authenticator.setUser(username)
             authenticator.setPassword(password)
             self._auth_attempt += 1
-
+    
+    def _page_load_progress(self, progress):
+        pass
+        
     def _page_loaded(self, ok):
         """Called back when page is loaded.
         """
-        self.loaded = ok
-        #self.cache.clear()
+        # FIXME: Check why ok == False when we are trying to load
+        # unsupported content
+        self.loaded = True
 
     def _page_load_started(self):
         """Called back when page load started.
@@ -771,9 +818,13 @@ class Ghost(object):
 
         :param reply: The QNetworkReply object.
         """
+        if reply.url() == self.page.currentFrame().url():
+            Logger.log("Injecting DOMReady code")
+            self._insert_dom_ready_code()
+            
         if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
             self.http_resources.append(HttpResource(reply, self.cache))
-
+            
     def _unsupported_content(self, reply):
         """Adds an HttpResource object to http_resources with unsupported
         content.
@@ -783,3 +834,4 @@ class Ghost(object):
         if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
             self.http_resources.append(HttpResource(reply, self.cache,
                 reply.readAll()))
+            
