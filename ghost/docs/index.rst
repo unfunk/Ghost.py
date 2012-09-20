@@ -6,13 +6,13 @@
 About Ghost.py
 ====================================
 
-This documentation correspond to the versión of Ghost.py in the following branch
+This documentation corresponds to the version of Ghost.py in the following branch
 https://github.com/carrerasrodrigo/Ghost.py manteined by Rodrigo Nicolas Carreras
 
-Ghost.py is originaly created by Jean-Philippe Serafin. I made a fork of his branch and
-I did the implementation of different functionalities since then. 
+Ghost.py is originally created by Jean-Philippe Serafin. I made a fork of his branch and
+I implemented different functionalities since then. 
 
-Ghost.py it's a Webkit based scriptable web browser for python. It bring to you all the
+Ghost.py is a Webkit based scriptable web browser for python. It brings you all the
 power of WebKit with an api in Python.
 
 
@@ -22,7 +22,7 @@ Installation
 First you need to install **PyQt** or **PySide**. This will require to install the QT framework first.
 You can find PyQt in the following link http://www.riverbankcomputing.com/software/pyqt/download
 
-Then we need to install Ghost.py and flask for the testing.
+Then you need to install Ghost.py and flask for the testing.
 
 Installing Flask::
 
@@ -66,9 +66,9 @@ Let's search some planes on ebay::
     gh.capture_to("plane.png")
 
 
-Some times we need do an scrapping on a website but we don't need to download
-css or js content. This Branch of Ghost.py has many optimization to make your
-experience faster than ever. Let see another example::
+Some times we need to scrap a website but we don't need to download
+css or js content. This Branch of Ghost.py has many improvements to make your
+experience faster than ever. Let's see another example::
 
     from ghost import Ghost
     
