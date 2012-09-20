@@ -233,6 +233,8 @@ class NetworkAccessManager(QNetworkAccessManager):
     
     """
     
+    def _create_proxy_factory(self):
+        pass
     def __init__(self, *args, **kwargs):
         cache_dir = kwargs.pop("cache_dir", "/tmp/ghost.py")
         cache_size = kwargs.pop("cache_size", 0)
