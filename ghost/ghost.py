@@ -12,18 +12,16 @@ try:
     import sip
     sip.setapi('QVariant', 2)
     
-    from PyQt4 import QtWebKit
+    from PyQt4 import QtWebKit, QtCore
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                 QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
-    from PyQt4 import QtCore
     from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
     try:
-        from PySide import QtWebKit
+        from PySide import QtWebKit, QtCore
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                     QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
-        from PySide import QtCore
         from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
