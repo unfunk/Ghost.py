@@ -410,7 +410,7 @@ class Ghost(object):
         return image
 
     def capture_to(self, path, region=None, selector=None,
-        format=Format_ARGB32_Premultiplied):
+        format=QImage.Format_ARGB32_Premultiplied):
         """Saves snapshot as image.
 
         :param path: The destination path.
