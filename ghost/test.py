@@ -4,6 +4,7 @@ import logging
 import time
 from unittest import TestCase
 from wsgiref.simple_server import make_server
+#from wsgi_proxy import start_proxy_app
 from ghost import Ghost
 
 
@@ -27,6 +28,13 @@ class ServerThread(threading.Thread):
             self.http_server.shutdown()
             del self.http_server
 
+
+class ProxyServerThread(threading.Thread):
+    """Starts a twisted Proxy Server
+    """
+    def run(self):
+        #start_proxy_app(5001, 5000)
+        pass
 
 class BaseGhostTestCase(TestCase):
     display = False
@@ -69,6 +77,7 @@ class BaseGhostTestCase(TestCase):
         self.ghost.delete_cache()
         self.ghost_prevent_download.delete_cookies()
         self.ghost_prevent_download.delete_cache()
+        self.ghost.manager.removeProxy()
         if self.display:
             self.ghost.hide()
 
@@ -105,4 +114,8 @@ class GhostTestCase(BaseGhostTestCase):
         cls.server_thread.start()
         while not hasattr(cls.server_thread, 'http_server'):
             time.sleep(0.01)
+        #cls.proxy_server = ProxyServerThread()
+        #cls.proxy_server.daemon = True
+        #cls.proxy_server.start()
+        
         super(GhostTestCase, cls).setUpClass()

@@ -29,6 +29,7 @@ except ImportError:
     except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
 
+from NetworkAccessManager import NetworkAccessManager
 
 default_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 " +\
     "(KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2"
@@ -221,46 +222,6 @@ class HttpResource(object):
             self.headers[unicode(header)] = unicode(reply.rawHeader(header))
         self._reply = reply
 
-class NetworkAccessManager(QNetworkAccessManager):
-    """NetworkAccessManager manages a QNetworkAccessManager. It's
-    crate a internal cache and manage all the request.
-    
-    :param cache_dir: a directory where Ghost is going to put the cache
-    :param cache_size: the Size of the cache in MB. If it's 0 the
-        cache it's automatically disabled.
-    :param prevent_download: A List of extensions of the files that you want
-        to prevent from downloading
-    
-    """
-    
-    def _create_proxy_factory(self):
-        pass
-    def __init__(self, *args, **kwargs):
-        cache_dir = kwargs.pop("cache_dir", "/tmp/ghost.py")
-        cache_size = kwargs.pop("cache_size", 0)
-        self._prevent_download = kwargs.pop("prevent_download", [])
-        
-        super(NetworkAccessManager, self).__init__(*args, **kwargs)
-    
-        cache = QNetworkDiskCache()
-        cache.setCacheDirectory(cache_dir)
-        cache.setMaximumCacheSize(cache_size * 1024 * 1024)
-        self.setCache(cache)
-        
-    def createRequest(self, op, request, device=None):
-        # FIXME: We have a problem here. Every request that is sended through
-        # this NetworkAccessManager has the same Cache Policy. It's
-        # Neccesary to move this to the Request or add some different
-        # mechanism here.
-        
-        request.setAttribute(request.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
-        #FIXME: add regular expressions to avoid the loop
-        #FIXME: It would be nice to use content type instead of the extension
-        for ext in self._prevent_download:
-            if unicode(request.url().toString()).endswith(ext):
-                return super(NetworkAccessManager, self).createRequest(op, QNetworkRequest(QUrl()), device)
-        
-        return super(NetworkAccessManager, self).createRequest(op, request, device)
 
 class GhostInit(QtCore.QObject):  
     """This class inject the DomReady Script in order to
@@ -355,8 +316,6 @@ class Ghost(object):
         self.page.setUserAgent(self.user_agent)
 
         self.page.networkAccessManager().authenticationRequired\
-            .connect(self._authenticate)
-        self.page.networkAccessManager().proxyAuthenticationRequired\
             .connect(self._authenticate)
 
         self.main_frame = self.page.mainFrame()
