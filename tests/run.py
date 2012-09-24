@@ -304,8 +304,7 @@ class GhostTest(GhostTestCase):
         self.assertEqual(len(resources), 1)
     
     def test_proxy_configuration(self):
-        import pdb; pdb.set_trace()
-        self.ghost.manager.configureProxy("127.0.0.1", 5001, user="1", password="1")
+        self.ghost.manager.configureProxy("127.0.0.1", 5001)
         page, resources = self.ghost.open("%siframe" % base_url)
         self.assertEqual(self.ghost.evaluate("document.title")[0], "Title1")
         self.ghost.manager.removeProxy()

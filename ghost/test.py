@@ -4,7 +4,7 @@ import logging
 import time
 from unittest import TestCase
 from wsgiref.simple_server import make_server
-#from wsgi_proxy import start_proxy_app
+from wsgi_proxy import start_proxy_app
 from ghost import Ghost
 
 
@@ -33,8 +33,7 @@ class ProxyServerThread(threading.Thread):
     """Starts a twisted Proxy Server
     """
     def run(self):
-        #start_proxy_app(5001, 5000)
-        pass
+        start_proxy_app(5001, 5000)
 
 class BaseGhostTestCase(TestCase):
     display = False
@@ -114,8 +113,8 @@ class GhostTestCase(BaseGhostTestCase):
         cls.server_thread.start()
         while not hasattr(cls.server_thread, 'http_server'):
             time.sleep(0.01)
-        #cls.proxy_server = ProxyServerThread()
-        #cls.proxy_server.daemon = True
-        #cls.proxy_server.start()
+        cls.proxy_server = ProxyServerThread()
+        cls.proxy_server.daemon = True
+        cls.proxy_server.start()
         
         super(GhostTestCase, cls).setUpClass()
