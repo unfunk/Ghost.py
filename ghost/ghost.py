@@ -16,7 +16,7 @@ try:
     from PyQt4.QtWebKit import QWebPage
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                 QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
-    from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
+    from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL, QObject
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
     try:
@@ -24,7 +24,7 @@ except ImportError:
         from PySide.QtWebKit import QWebPage
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                     QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
-        from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
+        from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL, QObject
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
@@ -223,7 +223,7 @@ class HttpResource(object):
         self._reply = reply
 
 
-class GhostInit(QtCore.QObject):  
+class GhostInit(QObject):  
     """This class inject the DomReady Script in order to
         detect when the DOM is Ready
     """
