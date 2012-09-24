@@ -22,11 +22,12 @@ Installation
 First you need to install **PyQt** or **PySide**. This will require to install the QT framework first.
 You can find PyQt in the following link http://www.riverbankcomputing.com/software/pyqt/download
 
-Then you need to install Ghost.py and flask for the testing.
+Then you need to install Ghost.py and the dependencies for testing, flask and paste.
 
-Installing Flask::
+Installing Flask and Paste::
 
     pip install Flask
+    pip install paste
 
 
 For Ghost.py::
