@@ -382,7 +382,7 @@ class Ghost(object):
         return nro is None or len(frames) < nro
     
     def capture(self, region=None, selector=None,
-            format=QImage.Format_ARGB32_Premultiplied):
+            format=QImage.A):
         """Returns snapshot as QImage.
 
         :param region: An optional tupple containing region as pixel
