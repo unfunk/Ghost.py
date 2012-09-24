@@ -27,7 +27,8 @@ except ImportError:
         from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL, QObject
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
-        raise Exception("Ghost.py requires PySide or PyQt")
+        raise
+        #raise Exception("Ghost.py requires PySide or PyQt")
 
 from NetworkAccessManager import NetworkAccessManager
 
