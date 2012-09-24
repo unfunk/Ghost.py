@@ -9,7 +9,7 @@ from app import app
 
 
 PORT = 5000
-
+PORT_PROXY = 5001
 base_url = 'http://localhost:%s/' % PORT
 
 
@@ -302,6 +302,20 @@ class GhostTest(GhostTestCase):
             "%slocal_resource" % base_url,
             wait_onload_event=False)
         self.assertEqual(len(resources), 1)
+    
+    def test_proxy_configuration(self):
+        self.ghost.manager.configureProxy("127.0.0.1", 5001)
+        page, resources = self.ghost.open("%siframe" % base_url,
+                auth=("1", "2"))
+        self.assertNotEqual(self.ghost.evaluate("document.title")[0], "Title1")
+        self.ghost.manager.removeProxy()
+        
+        self.ghost.manager.configureProxy("127.0.0.1", 5001)
+        page, resources = self.ghost.open("%siframe" % base_url,
+                auth=("dummy", "dummy"))
+        self.assertEqual(self.ghost.evaluate("document.title")[0], "Title1")
+        
+        
         
 if __name__ == '__main__':
     unittest.main()
