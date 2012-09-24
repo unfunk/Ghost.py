@@ -270,10 +270,14 @@ MOCK_MODULES = ['PyQt4',
                 'QtCore',
                 'QtWebKit',
                 'PySide',
+                'QImage',
                 'PySide.QtNetwork',
                 'PySide.QtCore',
                 'PySide.QtGui',
                 'PySide.QtWebKit']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
-    
+
+def NewEventMock():
+    yield 'Format_ARGB32_Premultiplied'
+sys.modules['QImage'].Format_ARGB32_Premultiplied = NewEventMock
