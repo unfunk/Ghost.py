@@ -259,8 +259,9 @@ class Mock(object):
             return Mock()
 
 MOCK_MODULES = ['PyQt4', 'PyQt4.QtNetwork', 'PyQt4.QtCore', 'PyQt4.QtGui', 'QtWebKit.QWebPage',
-                'QtCore.QObject', 'PyQt4.QtWebKit',
-                'PySide', 'PySide.QtNetwork', 'PySide.QtCore', 'PySide.QtGui', 'PySide.QtWebKit']
+                'QtCore.QObject', 'PyQt4.QtWebKit', 'QWebPage',
+                'PySide', 'PySide.QtNetwork', 'PySide.QtCore', 'PySide.QtGui',
+                'PySide.QtWebKit']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
     
