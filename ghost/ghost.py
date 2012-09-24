@@ -230,7 +230,7 @@ class GhostInit(QObject):
     """
     dom_is_ready = pyqtSignal(bool)
     
-    @QtCore.pyqtSlot()  
+    @pyqtSlot()  
     def is_ready(self):
         Logger.log("Firing Dom Ready Signal")
         self.dom_is_ready.emit(True)
