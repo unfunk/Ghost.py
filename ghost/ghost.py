@@ -13,7 +13,6 @@ try:
     sip.setapi('QVariant', 2)
     
     from PyQt4 import QtWebKit, QtCore
-    from PyQt4.QtWebKit import QWebPage
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                 QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
     from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
@@ -21,7 +20,6 @@ try:
 except ImportError:
     try:
         from PySide import QtWebKit, QtCore
-        from PySide.QtWebKit import QWebPage
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                     QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
         from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
@@ -47,7 +45,7 @@ class Logger(logging.Logger):
         getattr(logger, level)("%s: %s", sender, message)
 
 
-class GhostWebPage(QWebPage):
+class GhostWebPage(QtWebKit.QWebPage):
     """Overrides QtWebKit.QWebPage in order to intercept some graphical
     behaviours like alert(), confirm().
     Also intercepts client side console.log().
