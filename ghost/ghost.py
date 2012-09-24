@@ -18,7 +18,6 @@ try:
                                 QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
     from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL, QObject
     from PyQt4.QtGui import QApplication, QImage, QPainter
-    from PyQt4.QtGui.QImage import Format_ARGB32_Premultiplied
 except ImportError:
     try:
         from PySide import QtWebKit, QtCore
@@ -27,7 +26,6 @@ except ImportError:
                                     QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
         from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL, QObject
         from PySide.QtGui import QApplication, QImage, QPainter
-        from PySide.QtGui.QImage import Format_ARGB32_Premultiplied
     except ImportError:
         raise
         #raise Exception("Ghost.py requires PySide or PyQt")
