@@ -6,7 +6,7 @@ import logging
 
 from ghost import GhostTestCase, Ghost
 from app import app
-
+from wsgi_proxy import start_proxy_app
 
 PORT = 5000
 PORT_PROXY = 5001
@@ -21,7 +21,11 @@ class GhostTest(GhostTestCase):
     @classmethod
     def create_app(cls):
         return app
-
+    
+    @classmethod
+    def create_proxy_server(self):
+        return start_proxy_app
+        
     def test_open(self):
         page, resources = self.ghost.open(base_url)
         self.assertEqual(page.url, base_url)

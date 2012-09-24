@@ -96,7 +96,7 @@ experience faster than ever. Let's see another example::
         print l
 
 
-Ghost.py Class
+Ghost Class
 ====================================
 Contents:
 
@@ -108,6 +108,10 @@ Contents:
 .. autoclass:: Ghost
     :members: 
 
+NetworkAccessManager Content:
+
+.. autoclass:: NetworkAccessManager
+    :members: 
 
 Indices and tables
 ==================

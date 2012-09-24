@@ -4,7 +4,6 @@ import logging
 import time
 from unittest import TestCase
 from wsgiref.simple_server import make_server
-from wsgi_proxy import start_proxy_app
 from ghost import Ghost
 
 
@@ -30,10 +29,16 @@ class ServerThread(threading.Thread):
 
 
 class ProxyServerThread(threading.Thread):
-    """Starts a twisted Proxy Server
+    """Starts a Proxy Server
     """
+    def __init__(self, app, port=5001, portRedirect=5000):
+        self.app = app
+        self.port = port
+        self.portRedirect = portRedirect
+        super(ProxyServerThread, self).__init__()
+        
     def run(self):
-        start_proxy_app(5001, 5000, True)
+        self.app(self.port, self.portRedirect, True)
 
 class BaseGhostTestCase(TestCase):
     display = False
@@ -92,12 +97,18 @@ class GhostTestCase(BaseGhostTestCase):
     an HTTPServer running a WSGI application.
     """
     port = 5000
-
+    port_proxy = 5001
+    
     def create_app(self):
         """Returns your WSGI application for testing.
         """
         raise NotImplementedError
-
+    
+    def create_proxy_server(self):
+        """Returns your proxy server for testing.
+        """
+        raise NotImplementedError
+    
     @classmethod
     def tearDownClass(cls):
         """Stops HTTPServer instance."""
@@ -113,7 +124,8 @@ class GhostTestCase(BaseGhostTestCase):
         cls.server_thread.start()
         while not hasattr(cls.server_thread, 'http_server'):
             time.sleep(0.01)
-        cls.proxy_server = ProxyServerThread()
+        cls.proxy_server = ProxyServerThread(cls.create_proxy_server(),
+                                cls.port_proxy, cls.port)
         cls.proxy_server.daemon = True
         cls.proxy_server.start()
         

@@ -74,9 +74,10 @@ class NetworkAccessManager(QNetworkAccessManager):
         self.setProxy(proxy)
     
     def setAuthCredentials(self, user, password):
-        """Sets or update the auth credentials
-            :param user: the username
-            :param user: the password
+        """Sets or update the auth credentials.
+        
+        :param user: the username used for the authentication
+        :param password: the password used for the authentication
         """
         self._authIntent = 0
         self._auth = (user, password)
