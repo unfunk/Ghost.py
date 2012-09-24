@@ -27,7 +27,9 @@ class NetworkAccessManager(QNetworkAccessManager):
         to prevent from downloading
     
     """
-    _auth = ("dummy", "dummy")
+    _auth = ("dummy", "dummy2")
+    _authIntent = 0
+    _authProxy = ("dummy", "dummy2")
     
     def __init__(self, *args, **kwargs):
         cache_dir = kwargs.pop("cache_dir", "/tmp/ghost.py")
@@ -42,8 +44,8 @@ class NetworkAccessManager(QNetworkAccessManager):
         self.setCache(cache)
         
         # Manages the authentication for the proxy
-        self.proxyAuthenticationRequired.connect(self._authenticate)
-        #self.authenticationRequired.connect(self._authenticate)
+        self.proxyAuthenticationRequired.connect(self._authenticateProxy)
+        self.authenticationRequired.connect(self._authenticate)
         
     def configureProxy(self, host, port, user=None, password=None):
         """Add a proxy configuration for the Network Requests.
@@ -58,28 +60,40 @@ class NetworkAccessManager(QNetworkAccessManager):
             access with a password
         """
         proxy = QNetworkProxy()
-        #proxy.setType(QNetworkProxy.Socks5Proxy)
         proxy.setType(QNetworkProxy.HttpProxy)
         proxy.setHostName(host)
         proxy.setPort(port)
         
         if user is not None:
-            proxy.setUser(user);
+            proxy.setUser(user)
             
         if password is not None:
-            proxy.setPassword(password);
+            proxy.setPassword(password)
         
-        self._auth = (user, password)
-        #self.setAuthCredentials(user, password)
+        self._proxyAuth = (user, password)
         self.setProxy(proxy)
     
-    #def setAuthCredentials(self, user, password):
-    #    self._auth = (user, password)
-        
-    def _authenticate(self, mix, authenticator):
-        username, password = self._auth
+    def setAuthCredentials(self, user, password):
+        """Sets or update the auth credentials
+            :param user: the username
+            :param user: the password
+        """
+        self._authIntent = 0
+        self._auth = (user, password)
+    
+    def _authenticateProxy(self, mix, authenticator):
+        username, password = self._proxyAuth
         authenticator.setUser(username)
         authenticator.setPassword(password)
+        
+    def _authenticate(self, mix, authenticator):
+        # TODO: verify why exists a recursion with in the
+        # authentication
+        if self._authIntent == 0:
+            username, password = self._auth
+            authenticator.setUser(username)
+            authenticator.setPassword(password)
+        self._authIntent += 1
         
     def removeProxy(self):
         """Removes the proxy configuration
@@ -87,7 +101,6 @@ class NetworkAccessManager(QNetworkAccessManager):
         proxy = QNetworkProxy();
         proxy.setType(QNetworkProxy.NoProxy);
         self.setProxy(proxy)
-        
         
     def createRequest(self, op, request, device=None):
         # FIXME: We have a problem here. Every request that is sended through

@@ -33,7 +33,7 @@ class ProxyServerThread(threading.Thread):
     """Starts a twisted Proxy Server
     """
     def run(self):
-        start_proxy_app(5001, 5000)
+        start_proxy_app(5001, 5000, True)
 
 class BaseGhostTestCase(TestCase):
     display = False

@@ -315,9 +315,6 @@ class Ghost(object):
         # User Agent
         self.page.setUserAgent(self.user_agent)
 
-        self.page.networkAccessManager().authenticationRequired\
-            .connect(self._authenticate)
-
         self.main_frame = self.page.mainFrame()
         self.main_page = self.page
         
@@ -573,9 +570,9 @@ class Ghost(object):
         request.CacheLoadControl(QNetworkRequest.AlwaysNetwork)
         for header in headers:
             request.setRawHeader(header, headers[header])
-        self._auth = auth
-        self._auth_attempt = 0  # Avoids reccursion
         
+        if auth is not None:
+            self.manager.setAuthCredentials(auth[0], auth[1])
         self.main_frame.load(request, method, body)
         
         self.loaded = False
@@ -738,18 +735,6 @@ class Ghost(object):
     def delete_cache(self):
         self.cache.clear()
 
-    def _authenticate(self, mix, authenticator):
-        """Called back on basic / proxy http auth.
-
-        :param mix: The QNetworkReply or QNetworkProxy object.
-        :param authenticator: The QAuthenticator object.
-        """
-        if self._auth_attempt == 0:
-            username, password = self._auth
-            authenticator.setUser(username)
-            authenticator.setPassword(password)
-            self._auth_attempt += 1
-    
     def _page_load_progress(self, progress):
         pass
         

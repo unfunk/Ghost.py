@@ -5,6 +5,7 @@ import paste.proxy
 import paste.urlmap
 
 def start_proxy_app(port, port_forward, add_auth=False):
+    print "Proxy started in {0}  redirecting to {1}".format(port, port_forward)
     def dummyauth(environ, username, password):
         return username == password
     
@@ -22,5 +23,6 @@ def start_proxy_app(port, port_forward, add_auth=False):
     httpd = wsgiref.simple_server.make_server('', port, multi)
     httpd.serve_forever()
 
-#start_proxy_app(5001, 5000)
-#while 1: pass
+if __name__ == '__main__':
+    start_proxy_app(5001, 5000, True)
+    while 1: pass
