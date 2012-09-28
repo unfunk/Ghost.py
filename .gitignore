@@ -1,0 +1,12 @@
+*.pyc
+env
+build
+__pycache__
+Ghost.py.egg-info
+dist
+*.swp
+*.swo
+.tox
+
+*.komodoproject
+test_scripts
