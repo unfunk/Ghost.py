@@ -1,68 +1,709 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Ghost.py by carrerasrodrigo</title>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>About Ghost.py &mdash; Ghost.py 0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Ghost.py 0.0 documentation" href="#" /> 
   </head>
   <body>
-    <div class="wrapper">
-      <header>
-        <h1 class="header">Ghost.py</h1>
-        <p class="header">Webkit based scriptable web browser for python. </p>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Ghost.py 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
 
-        <ul>
-          <li class="download"><a class="buttons" href="https://github.com/carrerasrodrigo/Ghost.py/zipball/master">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/carrerasrodrigo/Ghost.py/tarball/master">Download TAR</a></li>
-          <li><a class="buttons github" href="https://github.com/carrerasrodrigo/Ghost.py">View On GitHub</a></li>
-        </ul>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="about-ghost-py">
+<h1>About Ghost.py<a class="headerlink" href="#about-ghost-py" title="Permalink to this headline">¶</a></h1>
+<p>This documentation corresponds to the version of Ghost.py in the following branch
+<a class="reference external" href="https://github.com/carrerasrodrigo/Ghost.py">https://github.com/carrerasrodrigo/Ghost.py</a> manteined by Rodrigo Nicolas Carreras</p>
+<p>Ghost.py is originally created by Jean-Philippe Serafin. I made a fork of his branch and
+I implemented different functionalities since then.</p>
+<p>Ghost.py is a Webkit based scriptable web browser for python. It brings you all the
+power of WebKit with an api in Python.</p>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>First you need to install <strong>PyQt</strong> or <strong>PySide</strong>. This will require to install the QT framework first.
+You can find PyQt in the following link <a class="reference external" href="http://www.riverbankcomputing.com/software/pyqt/download">http://www.riverbankcomputing.com/software/pyqt/download</a></p>
+<p>Then you need to install Ghost.py and the dependencies for testing, flask and paste.</p>
+<p>Installing Flask and Paste:</p>
+<div class="highlight-python"><pre>pip install Flask
+pip install paste</pre>
+</div>
+<p>For Ghost.py:</p>
+<div class="highlight-python"><pre>pip install -e git+git://github.com/carrerasrodrigo/Ghost.py.git#egg=Ghost.py</pre>
+</div>
+<p>or alternatively:</p>
+<div class="highlight-python"><pre>git clone git://github.com/carrerasrodrigo/Ghost.py.git
+cd Ghost.py
+python setup.py install</pre>
+</div>
+<p>Easy peasy!</p>
+</div>
+<div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<p>Let&#8217;s search some planes on ebay:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ghost</span> <span class="kn">import</span> <span class="n">Ghost</span>
 
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/carrerasrodrigo">carrerasrodrigo</a></p>
+<span class="n">url</span> <span class="o">=</span> <span class="s">&quot;http://www.ebay.com/&quot;</span>
+<span class="n">gh</span> <span class="o">=</span> <span class="n">Ghost</span><span class="p">()</span>
+
+<span class="c"># We load the main page of ebay</span>
+<span class="n">page</span><span class="p">,</span> <span class="n">resources</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">wait_onload_event</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c"># Full the main bar and click on the search button</span>
+<span class="n">gh</span><span class="o">.</span><span class="n">set_field_value</span><span class="p">(</span><span class="s">&quot;#gh-ac&quot;</span><span class="p">,</span> <span class="s">&quot;plane&quot;</span><span class="p">)</span>
+<span class="n">gh</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s">&quot;#gh-btn&quot;</span><span class="p">)</span>
+
+<span class="c"># Wait for the next page</span>
+<span class="n">gh</span><span class="o">.</span><span class="n">wait_for_selector</span><span class="p">(</span><span class="s">&quot;#e1-15&quot;</span><span class="p">)</span>
+
+<span class="c"># Save the image of the screen</span>
+<span class="n">gh</span><span class="o">.</span><span class="n">capture_to</span><span class="p">(</span><span class="s">&quot;plane.png&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Some times we need to scrap a website but we don&#8217;t need to download
+css or js content. This Branch of Ghost.py has many improvements to make your
+experience faster than ever. Let&#8217;s see another example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ghost</span> <span class="kn">import</span> <span class="n">Ghost</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="s">&quot;http://news.ycombinator.com/&quot;</span>
+<span class="c"># We enable the cache and set the maximun size to 10 MB</span>
+<span class="c"># We don&#39;t want to load images and load css or js files</span>
+<span class="n">gh</span> <span class="o">=</span> <span class="n">Ghost</span><span class="p">(</span><span class="n">cache_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">download_images</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+           <span class="n">prevent_download</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;css&quot;</span><span class="p">,</span> <span class="s">&quot;js&quot;</span><span class="p">])</span>
+
+<span class="c"># wait_onload_event will tell to Ghost to leave the open method</span>
+<span class="c"># when the On Ready event on the web page has been fired</span>
+<span class="n">page</span><span class="p">,</span> <span class="n">resources</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">wait_onload_event</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="c"># We retrive the links from the web page</span>
+<span class="n">links</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                        var links = document.querySelectorAll(&quot;a&quot;);</span>
+<span class="s">                        var listRet = [];</span>
+<span class="s">                        for (var i=0; i&lt;links.length; i++){</span>
+<span class="s">                            listRet.push(links[i].href);</span>
+<span class="s">                        }</span>
+<span class="s">                        listRet;</span>
+<span class="s">                    &quot;&quot;&quot;</span><span class="p">)</span>
+<span class="c"># Print the links</span>
+<span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="k">print</span> <span class="n">l</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ghost-class">
+<h1>Ghost Class<a class="headerlink" href="#ghost-class" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<span class="target" id="module-ghost"></span><dl class="class">
+<dt id="ghost.Ghost">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">Ghost</tt><big>(</big><em>user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML</em>, <em>like Gecko) Chrome/15.0.874.121 Safari/535.2'</em>, <em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>log_level=30</em>, <em>display=False</em>, <em>viewport_size=(800</em>, <em>600)</em>, <em>cache_dir='/tmp/ghost.py'</em>, <em>cache_size=0</em>, <em>download_images=True</em>, <em>prevent_download=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#ghost.Ghost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ghost manages a QWebPage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>user_agent</strong> &#8211; The default User-Agent header.</li>
+<li><strong>wait_timeout</strong> &#8211; Maximum step duration in second.</li>
+<li><strong>wait_callback</strong> &#8211; An optional callable that is periodically
+executed until Ghost stops waiting.</li>
+<li><strong>log_level</strong> &#8211; The optional logging level.</li>
+<li><strong>display</strong> &#8211; A boolean that tells ghost to displays UI.</li>
+<li><strong>viewport_size</strong> &#8211; A tupple that sets initial viewport size.</li>
+<li><strong>cache_dir</strong> &#8211; a directory where Ghost is going to put the cache</li>
+<li><strong>cache_size</strong> &#8211; the Size of the cache in MB. If it&#8217;s 0 the
+cache it&#8217;s automatically disabled.</li>
+<li><strong>download_images</strong> &#8211; Indicate if the browser download or not the images</li>
+<li><strong>prevent_download</strong> &#8211; A List of extensions of the files that you want
+to prevent from downloading</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="ghost.Ghost.capture">
+<tt class="descname">capture</tt><big>(</big><em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.Ghost.capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns snapshot as QImage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>region</strong> &#8211; An optional tupple containing region as pixel
+coodinates.</li>
+<li><strong>selector</strong> &#8211; A selector targeted the element to crop on.</li>
+<li><strong>format</strong> &#8211; The output image format.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.capture_to">
+<tt class="descname">capture_to</tt><big>(</big><em>path</em>, <em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.Ghost.capture_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves snapshot as image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; The destination path.</li>
+<li><strong>region</strong> &#8211; An optional tupple containing region as pixel
+coodinates.</li>
+<li><strong>selector</strong> &#8211; A selector targeted the element to crop on.</li>
+<li><strong>format</strong> &#8211; The output image format.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.click">
+<tt class="descname">click</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.click" title="Permalink to this definition">¶</a></dt>
+<dd><p>Click the targeted element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selector</strong> &#8211; A CSS3 selector to targeted element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="ghost.Ghost.confirm">
+<em class="property">class </em><tt class="descname">confirm</tt><big>(</big><em>confirm=True</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.confirm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Statement that tells Ghost how to deal with javascript confirm().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>confirm</strong> &#8211; A bollean that confirm.</li>
+<li><strong>callable</strong> &#8211; A callable that returns a boolean for confirmation.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ghost.Ghost.content">
+<tt class="descclassname">Ghost.</tt><tt class="descname">content</tt><a class="headerlink" href="#ghost.Ghost.content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns current frame HTML as a string.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ghost.Ghost.cookies">
+<tt class="descclassname">Ghost.</tt><tt class="descname">cookies</tt><a class="headerlink" href="#ghost.Ghost.cookies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all cookies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.delete_cookies">
+<tt class="descclassname">Ghost.</tt><tt class="descname">delete_cookies</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.delete_cookies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all cookies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.evaluate">
+<tt class="descclassname">Ghost.</tt><tt class="descname">evaluate</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates script in page frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>script</strong> &#8211; The script to evaluate.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.evaluate_js_file">
+<tt class="descclassname">Ghost.</tt><tt class="descname">evaluate_js_file</tt><big>(</big><em>path</em>, <em>encoding='utf-8'</em><big>)</big><a class="headerlink" href="#ghost.Ghost.evaluate_js_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates javascript file at given path in current frame.
+Raises native IOException in case of invalid file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; The path of the file.</li>
+<li><strong>encoding</strong> &#8211; The file&#8217;s encoding.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.exists">
+<tt class="descclassname">Ghost.</tt><tt class="descname">exists</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.Ghost.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if element exists for given selector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> &#8211; The element selector.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.exit">
+<tt class="descclassname">Ghost.</tt><tt class="descname">exit</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exits application and relateds.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.fill">
+<tt class="descclassname">Ghost.</tt><tt class="descname">fill</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills a form with provided values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> &#8211; A CSS selector to the target form to fill.</li>
+<li><strong>values</strong> &#8211; A dict containing the values.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.fire_on">
+<tt class="descclassname">Ghost.</tt><tt class="descname">fire_on</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.fire_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call method on element matching given selector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> &#8211; A CSS selector to the target element.</li>
+<li><strong>method</strong> &#8211; The name of the method to fire.</li>
+<li><strong>expect_loading</strong> &#8211; Specifies if a page loading is expected.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.global_exists">
+<tt class="descclassname">Ghost.</tt><tt class="descname">global_exists</tt><big>(</big><em>global_name</em><big>)</big><a class="headerlink" href="#ghost.Ghost.global_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if javascript global exists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>global_name</strong> &#8211; The name of the global.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.hide">
+<tt class="descclassname">Ghost.</tt><tt class="descname">hide</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.hide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the webview.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.open">
+<tt class="descclassname">Ghost.</tt><tt class="descname">open</tt><big>(</big><em>address</em>, <em>method='get'</em>, <em>headers={}</em>, <em>auth=None</em>, <em>wait_onload_event=True</em><big>)</big><a class="headerlink" href="#ghost.Ghost.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens a web page.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> &#8211; The resource URL.</li>
+<li><strong>method</strong> &#8211; The Http method.</li>
+<li><strong>headers</strong> &#8211; An optional dict of extra request hearders.</li>
+<li><strong>auth</strong> &#8211; An optional tupple of HTTP auth (username, password).</li>
+<li><strong>wait_onload_event</strong> &#8211; If it&#8217;s set to True waits until the OnLoad event from
+the main page is fired. Otherwise wait until the Dom is ready.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Page resource, All loaded resources.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="ghost.Ghost.prompt">
+<em class="property">class </em><tt class="descclassname">Ghost.</tt><tt class="descname">prompt</tt><big>(</big><em>value=''</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.prompt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Statement that tells Ghost how to deal with javascript prompt().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>value</strong> &#8211; A string value to fill in prompt.</li>
+<li><strong>callback</strong> &#8211; A callable that returns the value to fill in.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.region_for_selector">
+<tt class="descclassname">Ghost.</tt><tt class="descname">region_for_selector</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.region_for_selector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns frame region for given selector as tupple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selector</strong> &#8211; The targeted element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.set_field_value">
+<tt class="descclassname">Ghost.</tt><tt class="descname">set_field_value</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.set_field_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the value of the field matched by given selector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> &#8211; A CSS selector that target the field.</li>
+<li><strong>value</strong> &#8211; The value to fill in.</li>
+<li><strong>blur</strong> &#8211; An optional boolean that force blur when filled in.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.set_viewport_size">
+<tt class="descclassname">Ghost.</tt><tt class="descname">set_viewport_size</tt><big>(</big><em>width</em>, <em>height</em><big>)</big><a class="headerlink" href="#ghost.Ghost.set_viewport_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the page viewport size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>width</strong> &#8211; An integer that sets width pixel count.</li>
+<li><strong>height</strong> &#8211; An integer that sets height pixel count.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.show">
+<tt class="descclassname">Ghost.</tt><tt class="descname">show</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show current page inside a QWebView.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_frame">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_frame</tt><big>(</big><em>frameName=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the indicated frame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frameName</strong> &#8211; The name of the frame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_frame_nro">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_frame_nro</tt><big>(</big><em>nro=-1</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_frame_nro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the indicated frame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nro</strong> &#8211; Number of the frame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_main_window">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_main_window</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_main_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the main windows</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_sub_window">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_sub_window</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_sub_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the indicated window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nro</strong> &#8211; Number of the window</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for</tt><big>(</big><em>condition</em>, <em>timeout_message</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until condition is True.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>condition</strong> &#8211; A callable that returns the condition.</li>
+<li><strong>timeout_message</strong> &#8211; The exception message on timeout.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_alert">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_alert</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_alert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits for main frame alert().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_page_loaded">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_page_loaded</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_page_loaded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until page is loaded, assumed that a page as been requested.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_selector">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_selector</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_selector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until selector match an element on the frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selector</strong> &#8211; The selector to wait for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_text">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_text</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until given text appear on main frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> &#8211; The text to wait for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<p>NetworkAccessManager Content:</p>
+<dl class="class">
+<dt id="ghost.NetworkAccessManager">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">NetworkAccessManager</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>NetworkAccessManager manages a QNetworkAccessManager. It&#8217;s
+crate a internal cache and manage all the request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cache_dir</strong> &#8211; a directory where Ghost is going to put the cache</li>
+<li><strong>cache_size</strong> &#8211; the Size of the cache in MB. If it&#8217;s 0 the
+cache it&#8217;s automatically disabled.</li>
+<li><strong>prevent_download</strong> &#8211; A List of extensions of the files that you want
+to prevent from downloading</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="ghost.NetworkAccessManager.configureProxy">
+<tt class="descname">configureProxy</tt><big>(</big><em>host</em>, <em>port</em>, <em>user=None</em>, <em>password=None</em><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager.configureProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a proxy configuration for the Network Requests.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>host</strong> &#8211; the proxy host</li>
+<li><strong>port</strong> &#8211; the proxy port</li>
+<li><strong>user</strong> &#8211; if the proxy has authentication this param sets
+the user to be used. It should be None if it&#8217;s not required to
+access with a user</li>
+<li><strong>password</strong> &#8211; if the proxy has authentication this param sets
+the password to be used. It should be None if it&#8217;s not required to
+access with a password</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.NetworkAccessManager.removeProxy">
+<tt class="descname">removeProxy</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager.removeProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the proxy configuration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.NetworkAccessManager.setAuthCredentials">
+<tt class="descname">setAuthCredentials</tt><big>(</big><em>user</em>, <em>password</em><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager.setAuthCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets or update the auth credentials.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>user</strong> &#8211; the username used for the authentication</li>
+<li><strong>password</strong> &#8211; the password used for the authentication</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
 
 
-      </header>
-      <section>
-        <h3>Welcome to GitHub Pages.</h3>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">About Ghost.py</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#ghost-class">Ghost Class</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
-
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
-
-<p><a href="docs/build/html/index.html">Full Doc</a></p>
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
-
-<h3>Designer Templates</h3>
-
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
-
-<h3>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-      <footer>
-        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
-      </footer>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Ghost.py 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, .
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
   </body>
 </html>
