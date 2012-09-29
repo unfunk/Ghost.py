@@ -9,4 +9,5 @@ dist
 .tox
 
 *.komodoproject
-test_scripts
+tests_scripts
+ghost/ghost
