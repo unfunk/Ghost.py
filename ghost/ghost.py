@@ -420,7 +420,7 @@ class Ghost(object):
             The available formats can be found here http://qt-project.org/doc/qt-4.8/qimage.html#Format-enum
             There is also a "pdf" format that will render the page into a pdf file
         """
-        if format == "pdf":
+        if str(format).startswith("pdf"):
             return self.pdf_engine.render_pdf(self.page, path)
         else:
             self.capture(region=region, format=format,

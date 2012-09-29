@@ -1,7 +1,29 @@
+from PyQt4.QtCore import QSizeF
 from PyQt4.QtGui import QPrinter
 
+        
+class PaperSize(object):
+    """This class tells to the PdfPrinter how to render the webpage
+    :param width: An int representing the width of the page
+    :param height: An int representing the height of the page
+    :param margin: a tuple of ints representing the margins of the page
+        (margin_left, margin_top, margin_right, margin_bottom)
+    :param orientation: landscape | portrait. This option only makes
+        sense if page_type it's not None
+    :params page_type: The format of the page, it can be :
+        A0|A1|A2|A3|A4|A5|A6|A7|A8|A9|B0|B1|B2|B3|B4|B5|B6|B7|
+        B8|B9|B10|C5E|Comm10E|DLE|Executive|Folio|Ledger|
+        Legal|Letter|Tabloid|
+    """
+    def __init__(self, width, height, margin, orientation=None, page_type=None):
+        self.width = width
+        self.height = height
+        self.margin = margin
+        self.orientation = orientation
+        self.page_type = page_type
+
 class Pdf(object):
-    FORMATS = [
+    PAGE_TYPE = [
         ("A0", QPrinter.A0),
         ("A1", QPrinter.A1),
         ("A2", QPrinter.A2),
@@ -38,60 +60,52 @@ class Pdf(object):
         # TODO: implement
         return 72
     
-    def render_pdf(page, fileName):
+    def render_pdf(self, page, fileName, paperSize=None):
         """Renders the page into a pdf
         :param page: The webpage that we want to render
         :param fileName: The path where we want to save the pdf.
             For example /home/user/mypdf.pdf
+        :param paperSize: An PaperSize object that will be used
+            to render the webpage
         """
-        
         mainFrame = page.currentFrame()
         
         printer = QPrinter()
         printer.setOutputFormat(QPrinter.PdfFormat)
         printer.setOutputFileName(fileName)
         printer.setResolution(self._get_default_dpi())
-        paperSize = None
-    
+        
         if paperSize is None:
-            pageSize = mainFrame.contentsSize()
-            paperSize = {}
-            paperSize["width"] = "{0}px".format(pageSize.width())
-            paperSize["height"] = "{0}px".format(pageSize.height())
-            paperSize["margin"] = "0px".format(pageSize.height())
-            paperSize["format"] = "A4"
+            ps = mainFrame.contentsSize()
+            paperSize = PaperSize(width=ps.width(),
+                    height=ps.width(),
+                    margin=(0, 0, 0, 0),
+                    orientation=None,
+                    page_type=None)
             
-        if False and "width" in paperSize  and "height" in paperSize:
-            sizePt = (paperSize["width"], 
-                                paperSize["height"])
-            printer.setPaperSize(sizePt, QPrinter.Point)
-        elif "format" in paperSize:
-            if "orientation" in paperSize and \
-                paperSize["orientation"].lower() == "landscape":
-                    orientation = QPrinter.Landscape
+        
+        if paperSize.page_type is not None:
+            if paperSize.orientation.lower() == "landscape":
+                orientation = QPrinter.Landscape
             else:
                 orientation = QPrinter.Portrait
             printer.setOrientation(orientation)
             
             printer.setPaperSize(QPrinter.A4) # Fallback
-            for f in FORMATS:
-                if paperSize["format"].lower() == f[0].lower():
+            for f in self.PAGE_TYPE:
+                if paperSize.page_type.lower() == f[0].lower():
                     printer.setPaperSize(f[1])
                     break
         else:
-            return False
+            sizePt = QSizeF(paperSize.width, 
+                            paperSize.height)
+            printer.setPaperSize(sizePt, QPrinter.Point)
             
-    
-        if "border" in paperSize and not "margin" in paperSize:
-            # backwards compatibility
-            paperSize["margin"] = paperSize["border"]
-    
+        """
         marginLeft = 0;
         marginTop = 0;
         marginRight = 0;
         marginBottom = 0;
-    
-        """
         if paperSize["margin"]:
             margins = paperSize["margin"]
             if margins.canConvert(QVariant.Map):
@@ -109,7 +123,9 @@ class Pdf(object):
         
         printer.setPageMargins(marginLeft, marginTop, marginRight, marginBottom, QPrinter.Point)
         """
-        printer.setPageMargins(0, 0, 0, 0, QPrinter.Point)
+        printer.setPageMargins(paperSize.margin[0],
+                               paperSize.margin[1],
+                               paperSize.margin[2],
+                               paperSize.margin[3],
+                               QPrinter.Point)
         mainFrame.print_(printer)
-        
-        return True
