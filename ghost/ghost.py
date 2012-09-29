@@ -30,6 +30,7 @@ except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
 
 from NetworkAccessManager import NetworkAccessManager
+from pdf import Pdf
 
 default_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 " +\
     "(KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2"
@@ -261,8 +262,9 @@ class Ghost(object):
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
             download_images=True, prevent_download=[]):
+        
+        self.pdf_engine = Pdf()
         self.http_resources = []
-
         self.user_agent = user_agent
         self.wait_timeout = wait_timeout
         self.wait_callback = wait_callback
@@ -415,9 +417,14 @@ class Ghost(object):
             coodinates.
         :param selector: A selector targeted the element to crop on.
         :param format: The output image format.
+            The available formats can be found here http://qt-project.org/doc/qt-4.8/qimage.html#Format-enum
+            There is also a "pdf" format that will render the page into a pdf file
         """
-        self.capture(region=region, format=format,
-            selector=selector).save(path)
+        if format == "pdf":
+            return self.pdf_engine.render_pdf(self.page, path)
+        else:
+            self.capture(region=region, format=format,
+                selector=selector).save(path)
 
     @client_utils_required
     @can_load_page
