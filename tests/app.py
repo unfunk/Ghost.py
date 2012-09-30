@@ -103,6 +103,17 @@ def iframe2():
 def local_resource():
     return render_template('local_resource.html')
 
+@app.route('/send_pdf')
+def send_pdf():
+    h = Headers()
+    h.add('Content-type', 'application/pdf', charset='utf8')
+    h.add('Content-disposition', 'attachment', filename='martin_fierro.pdf')
+    with open(os.path.join(os.path.dirname(__file__), 'static', 'martin_fierro.pdf'), 'r') as f:
+        data = f.read()
+    return Response(data, headers=h)
+
+
+
 @app.route('/no-cache-js')
 def no_cache_js():
     h = Headers()

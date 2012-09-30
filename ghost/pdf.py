@@ -1,5 +1,14 @@
-from PyQt4.QtCore import QSizeF
-from PyQt4.QtGui import QPrinter
+try:
+    from PyQt4.QtCore import QSizeF
+    from PyQt4.QtGui import QPrinter
+except ImportError:
+    try:
+        from PySide.QtCore import QSizeF
+        from PySide.QtGui import QPrinter
+    except ImportError:
+        raise Exception("Ghost.py requires PySide or PyQt")
+
+    
 
         
 class PaperSize(object):
@@ -100,29 +109,7 @@ class Pdf(object):
             sizePt = QSizeF(paperSize.width, 
                             paperSize.height)
             printer.setPaperSize(sizePt, QPrinter.Point)
-            
-        """
-        marginLeft = 0;
-        marginTop = 0;
-        marginRight = 0;
-        marginBottom = 0;
-        if paperSize["margin"]:
-            margins = paperSize["margin"]
-            if margins.canConvert(QVariant.Map):
-                mmap = margins.toMap()
-                marginLeft = printMargin(mmap, "left")
-                marginTop = printMargin(mmap, "top")
-                marginRight = printMargin(mmap, "right")
-                marginBottom = printMargin(mmap, "bottom")
-            elif margins.canConvert(QVariant.String):
-                margin = stringToPointSize(margins.toString())
-                marginLeft = margin
-                marginTop = margin
-                marginRight = margin
-                marginBottom = margin
-        
-        printer.setPageMargins(marginLeft, marginTop, marginRight, marginBottom, QPrinter.Point)
-        """
+           
         printer.setPageMargins(paperSize.margin[0],
                                paperSize.margin[1],
                                paperSize.margin[2],
