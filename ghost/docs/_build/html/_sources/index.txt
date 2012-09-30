@@ -114,6 +114,11 @@ NetworkAccessManager Content:
 .. autoclass:: NetworkAccessManager
     :members: 
 
+PageSize Content:
+
+.. autoclass:: PageSize
+    :members:
+    
 Indices and tables
 ==================
 

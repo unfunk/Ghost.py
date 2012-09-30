@@ -2,6 +2,7 @@
 import threading
 import logging
 import time
+import os
 from unittest import TestCase
 from wsgiref.simple_server import make_server
 from ghost import Ghost
@@ -82,6 +83,7 @@ class BaseGhostTestCase(TestCase):
         self.ghost_prevent_download.delete_cookies()
         self.ghost_prevent_download.delete_cache()
         self.ghost.manager.removeProxy()
+        
         if self.display:
             self.ghost.hide()
 

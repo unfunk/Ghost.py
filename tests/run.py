@@ -17,7 +17,20 @@ class GhostTest(GhostTestCase):
     port = PORT
     display = False
     log_level = logging.INFO
-
+    test_path = os.path.dirname(__file__)
+    
+    
+    @classmethod
+    def tearDownClass(cls):
+        super(GhostTest, cls).tearDownClass()
+        
+        filesToDelete = ["pdf_test_file.pdf"]
+        for f in filesToDelete:
+            p = os.path.join(cls.test_path, f)
+            if os.path.exists(p):
+                os.remove(p)
+    
+    
     @classmethod
     def create_app(cls):
         return app
@@ -249,10 +262,21 @@ class GhostTest(GhostTestCase):
 
     def test_unsupported_content(self):
         page, resources = self.ghost.open("%ssend-file" % base_url)
-        foo = open(os.path.join(os.path.dirname(__file__), 'static',
-        'foo.tar.gz'), 'r').read(1024)
+        with open(os.path.join(os.path.dirname(__file__), 'static',
+            'foo.tar.gz'), 'r') as f:
+            foo = f.read()
         self.assertEqual(resources[0].content, foo)
-    
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(page, None)
+        
+        page, resources = self.ghost.open("%ssend_pdf" % base_url)
+        with open(os.path.join(os.path.dirname(__file__), 'static',
+            'martin_fierro.pdf'), 'r') as f:
+            foo = f.read()
+        self.assertEqual(resources[0].content, foo)
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(page, None)
+        
     def test_change_frame(self):
         page, resources = self.ghost.open("%siframe" % base_url)
         self.ghost.switch_to_frame("frame2")
@@ -318,8 +342,12 @@ class GhostTest(GhostTestCase):
         page, resources = self.ghost.open("%siframe" % base_url,
                 auth=("dummy", "dummy"))
         self.assertEqual(self.ghost.evaluate("document.title")[0], "Title1")
-        
-        
-        
+    
+    def test_pdf_capture(self):
+        p = os.path.join(self.test_path, "pdf_test_file.pdf")
+        page, resources = self.ghost.open("%siframe" % base_url)
+        self.ghost.capture_to(p, format="pdf")
+        self.assertTrue(os.path.exists(p))
+    
 if __name__ == '__main__':
     unittest.main()
