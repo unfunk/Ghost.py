@@ -39,7 +39,6 @@ default_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 " +\
 logging.basicConfig()
 logger = logging.getLogger('ghost')
 
-
 class Logger(logging.Logger):
     @staticmethod
     def log(message, sender="Ghost", level="info"):
@@ -257,7 +256,8 @@ class Ghost(object):
     _prompt_expected = None
     _upload_file = None
     _app = None
-
+    _unsupported_files = {}
+    
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
@@ -710,7 +710,7 @@ class Ghost(object):
     def wait_for_page_loaded(self):
         """Waits until page is loaded, assumed that a page as been requested.
         """
-        self.wait_for(lambda: self.loaded,
+        self.wait_for(lambda: self.loaded and len(self._unsupported_files.keys()) == 0,
             'Unable to load requested page')
         resources = self._release_last_resources()
         page = None
@@ -774,17 +774,19 @@ class Ghost(object):
         if reply.url() == self.page.currentFrame().url():
             Logger.log("Injecting DOMReady code")
             self._insert_dom_ready_code()
-            
+        
+        content = None
+        if unicode(reply.url()) in self._unsupported_files:
+            del self._unsupported_files[unicode(reply.url())]
+            content = reply.readAll()
+        
         if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
-            self.http_resources.append(HttpResource(reply, self.cache))
-            
+            self.http_resources.append(HttpResource(reply, self.cache, content))
+        
     def _unsupported_content(self, reply):
         """Adds an HttpResource object to http_resources with unsupported
         content.
 
         :param reply: The QNetworkReply object.
         """
-        if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
-            self.http_resources.append(HttpResource(reply, self.cache,
-                reply.readAll()))
-            
+        self._unsupported_files[unicode(reply.url())] = reply
