@@ -240,7 +240,7 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
-
+"""
 import sys
 class Mock(object):
     def __init__(self, *args, **kwargs):
@@ -262,4 +262,4 @@ MOCK_MODULES = ['PyQt4', 'PyQt4.QtNetwork', 'PyQt4.QtCore', 'PyQt4.QtGui', 'QtWe
                 'QtCore.QObject', 'PyQt4.QtWebKit', 'PySide', 'PySide.QtNetwork', 'PySide.QtCore', 'PySide.QtGui']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
-    
+"""

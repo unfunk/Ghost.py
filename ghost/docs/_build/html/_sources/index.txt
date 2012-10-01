@@ -98,7 +98,7 @@ experience faster than ever. Let's see another example::
 
 
 Ghost Class
-====================================
+===========
 Contents:
 
 .. toctree::
@@ -110,13 +110,13 @@ Contents:
     :members: 
 
 NetworkAccessManager Content:
-
+-----------------------------
 .. autoclass:: NetworkAccessManager
     :members: 
 
-PageSize Content:
-
-.. autoclass:: PageSize
+PaperSize Content:
+------------------
+.. autoclass:: PaperSize
     :members:
     
 Indices and tables

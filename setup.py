@@ -10,11 +10,11 @@ from setuptools import setup, find_packages
 
 setup(
     name='Ghost.py',
-    version='0.1b',
-    url='https://github.com/jeanphix/Ghost.py',
+    version='0.2b',
+    url='https://github.com/carrerasrodrigo/Ghost.py',
     license='mit',
-    author='Jean-Philippe Serafin',
-    author_email='serafinjp@gmail.com',
+    author='Jean-Philippe Serafin | Rodrigo N. Carreras',
+    author_email='carrerasrodrigo@gmail.com',
     description='Webkit based webclient.',
     long_description=__doc__,
     data_files=[('ghost', ['README.rst', 'ghost/utils.js'])],

@@ -34,6 +34,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="#">Ghost.py 0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -130,8 +133,546 @@ experience faster than ever. Let&#8217;s see another example:</p>
 <ul class="simple">
 </ul>
 </div>
-<p>NetworkAccessManager Content:</p>
-<p>PageSize Content:</p>
+<span class="target" id="module-ghost"></span><dl class="class">
+<dt id="ghost.Ghost">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">Ghost</tt><big>(</big><em>user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML</em>, <em>like Gecko) Chrome/15.0.874.121 Safari/535.2'</em>, <em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>log_level=30</em>, <em>display=False</em>, <em>viewport_size=(800</em>, <em>600)</em>, <em>cache_dir='/tmp/ghost.py'</em>, <em>cache_size=0</em>, <em>download_images=True</em>, <em>prevent_download=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#ghost.Ghost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ghost manages a QWebPage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>user_agent</strong> &#8211; The default User-Agent header.</li>
+<li><strong>wait_timeout</strong> &#8211; Maximum step duration in second.</li>
+<li><strong>wait_callback</strong> &#8211; An optional callable that is periodically
+executed until Ghost stops waiting.</li>
+<li><strong>log_level</strong> &#8211; The optional logging level.</li>
+<li><strong>display</strong> &#8211; A boolean that tells ghost to displays UI.</li>
+<li><strong>viewport_size</strong> &#8211; A tupple that sets initial viewport size.</li>
+<li><strong>cache_dir</strong> &#8211; a directory where Ghost is going to put the cache</li>
+<li><strong>cache_size</strong> &#8211; the Size of the cache in MB. If it&#8217;s 0 the
+cache it&#8217;s automatically disabled.</li>
+<li><strong>download_images</strong> &#8211; Indicate if the browser download or not the images</li>
+<li><strong>prevent_download</strong> &#8211; A List of extensions of the files that you want
+to prevent from downloading</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="ghost.Ghost.capture">
+<tt class="descname">capture</tt><big>(</big><em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.Ghost.capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns snapshot as QImage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>region</strong> &#8211; An optional tupple containing region as pixel
+coodinates.</li>
+<li><strong>selector</strong> &#8211; A selector targeted the element to crop on.</li>
+<li><strong>format</strong> &#8211; The output image format.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.capture_to">
+<tt class="descname">capture_to</tt><big>(</big><em>path</em>, <em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.Ghost.capture_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves snapshot as image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; The destination path.</li>
+<li><strong>region</strong> &#8211; An optional tupple containing region as pixel
+coodinates.</li>
+<li><strong>selector</strong> &#8211; A selector targeted the element to crop on.</li>
+<li><strong>format</strong> &#8211; The output image format.
+The available formats can be found here <a class="reference external" href="http://qt-project.org/doc/qt-4.8/qimage.html#Format-enum">http://qt-project.org/doc/qt-4.8/qimage.html#Format-enum</a>
+There is also a &#8220;pdf&#8221; format that will render the page into a pdf file</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.click">
+<tt class="descname">click</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.click" title="Permalink to this definition">¶</a></dt>
+<dd><p>Click the targeted element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selector</strong> &#8211; A CSS3 selector to targeted element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="ghost.Ghost.confirm">
+<em class="property">class </em><tt class="descname">confirm</tt><big>(</big><em>confirm=True</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.confirm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Statement that tells Ghost how to deal with javascript confirm().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>confirm</strong> &#8211; A bollean that confirm.</li>
+<li><strong>callable</strong> &#8211; A callable that returns a boolean for confirmation.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ghost.Ghost.content">
+<tt class="descclassname">Ghost.</tt><tt class="descname">content</tt><a class="headerlink" href="#ghost.Ghost.content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns current frame HTML as a string.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ghost.Ghost.cookies">
+<tt class="descclassname">Ghost.</tt><tt class="descname">cookies</tt><a class="headerlink" href="#ghost.Ghost.cookies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all cookies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.delete_cookies">
+<tt class="descclassname">Ghost.</tt><tt class="descname">delete_cookies</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.delete_cookies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all cookies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.evaluate">
+<tt class="descclassname">Ghost.</tt><tt class="descname">evaluate</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates script in page frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>script</strong> &#8211; The script to evaluate.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.evaluate_js_file">
+<tt class="descclassname">Ghost.</tt><tt class="descname">evaluate_js_file</tt><big>(</big><em>path</em>, <em>encoding='utf-8'</em><big>)</big><a class="headerlink" href="#ghost.Ghost.evaluate_js_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates javascript file at given path in current frame.
+Raises native IOException in case of invalid file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; The path of the file.</li>
+<li><strong>encoding</strong> &#8211; The file&#8217;s encoding.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.exists">
+<tt class="descclassname">Ghost.</tt><tt class="descname">exists</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.Ghost.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if element exists for given selector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> &#8211; The element selector.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.exit">
+<tt class="descclassname">Ghost.</tt><tt class="descname">exit</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exits application and relateds.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.fill">
+<tt class="descclassname">Ghost.</tt><tt class="descname">fill</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills a form with provided values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> &#8211; A CSS selector to the target form to fill.</li>
+<li><strong>values</strong> &#8211; A dict containing the values.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.fire_on">
+<tt class="descclassname">Ghost.</tt><tt class="descname">fire_on</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.fire_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call method on element matching given selector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> &#8211; A CSS selector to the target element.</li>
+<li><strong>method</strong> &#8211; The name of the method to fire.</li>
+<li><strong>expect_loading</strong> &#8211; Specifies if a page loading is expected.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.global_exists">
+<tt class="descclassname">Ghost.</tt><tt class="descname">global_exists</tt><big>(</big><em>global_name</em><big>)</big><a class="headerlink" href="#ghost.Ghost.global_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if javascript global exists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>global_name</strong> &#8211; The name of the global.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.hide">
+<tt class="descclassname">Ghost.</tt><tt class="descname">hide</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.hide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the webview.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.open">
+<tt class="descclassname">Ghost.</tt><tt class="descname">open</tt><big>(</big><em>address</em>, <em>method='get'</em>, <em>headers={}</em>, <em>auth=None</em>, <em>wait_onload_event=True</em><big>)</big><a class="headerlink" href="#ghost.Ghost.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens a web page.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> &#8211; The resource URL.</li>
+<li><strong>method</strong> &#8211; The Http method.</li>
+<li><strong>headers</strong> &#8211; An optional dict of extra request hearders.</li>
+<li><strong>auth</strong> &#8211; An optional tupple of HTTP auth (username, password).</li>
+<li><strong>wait_onload_event</strong> &#8211; If it&#8217;s set to True waits until the OnLoad event from
+the main page is fired. Otherwise wait until the Dom is ready.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Page resource, All loaded resources.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="ghost.Ghost.prompt">
+<em class="property">class </em><tt class="descclassname">Ghost.</tt><tt class="descname">prompt</tt><big>(</big><em>value=''</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.prompt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Statement that tells Ghost how to deal with javascript prompt().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>value</strong> &#8211; A string value to fill in prompt.</li>
+<li><strong>callback</strong> &#8211; A callable that returns the value to fill in.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.region_for_selector">
+<tt class="descclassname">Ghost.</tt><tt class="descname">region_for_selector</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.region_for_selector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns frame region for given selector as tupple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selector</strong> &#8211; The targeted element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.set_field_value">
+<tt class="descclassname">Ghost.</tt><tt class="descname">set_field_value</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.set_field_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the value of the field matched by given selector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> &#8211; A CSS selector that target the field.</li>
+<li><strong>value</strong> &#8211; The value to fill in.</li>
+<li><strong>blur</strong> &#8211; An optional boolean that force blur when filled in.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.set_viewport_size">
+<tt class="descclassname">Ghost.</tt><tt class="descname">set_viewport_size</tt><big>(</big><em>width</em>, <em>height</em><big>)</big><a class="headerlink" href="#ghost.Ghost.set_viewport_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the page viewport size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>width</strong> &#8211; An integer that sets width pixel count.</li>
+<li><strong>height</strong> &#8211; An integer that sets height pixel count.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.show">
+<tt class="descclassname">Ghost.</tt><tt class="descname">show</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show current page inside a QWebView.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_frame">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_frame</tt><big>(</big><em>frameName=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the indicated frame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frameName</strong> &#8211; The name of the frame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_frame_nro">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_frame_nro</tt><big>(</big><em>nro=-1</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_frame_nro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the indicated frame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nro</strong> &#8211; Number of the frame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_main_window">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_main_window</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_main_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the main windows</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_sub_window">
+<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_sub_window</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_sub_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the indicated window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nro</strong> &#8211; Number of the window</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for</tt><big>(</big><em>condition</em>, <em>timeout_message</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until condition is True.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>condition</strong> &#8211; A callable that returns the condition.</li>
+<li><strong>timeout_message</strong> &#8211; The exception message on timeout.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_alert">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_alert</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_alert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits for main frame alert().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_page_loaded">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_page_loaded</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_page_loaded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until page is loaded, assumed that a page as been requested.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_selector">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_selector</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_selector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until selector match an element on the frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selector</strong> &#8211; The selector to wait for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.wait_for_text">
+<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_text</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits until given text appear on main frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> &#8211; The text to wait for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="networkaccessmanager-content">
+<h2>NetworkAccessManager Content:<a class="headerlink" href="#networkaccessmanager-content" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ghost.NetworkAccessManager">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">NetworkAccessManager</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>NetworkAccessManager manages a QNetworkAccessManager. It&#8217;s
+crate a internal cache and manage all the request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cache_dir</strong> &#8211; a directory where Ghost is going to put the cache</li>
+<li><strong>cache_size</strong> &#8211; the Size of the cache in MB. If it&#8217;s 0 the
+cache it&#8217;s automatically disabled.</li>
+<li><strong>prevent_download</strong> &#8211; A List of extensions of the files that you want
+to prevent from downloading</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="ghost.NetworkAccessManager.configureProxy">
+<tt class="descname">configureProxy</tt><big>(</big><em>host</em>, <em>port</em>, <em>user=None</em>, <em>password=None</em><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager.configureProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a proxy configuration for the Network Requests.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>host</strong> &#8211; the proxy host</li>
+<li><strong>port</strong> &#8211; the proxy port</li>
+<li><strong>user</strong> &#8211; if the proxy has authentication this param sets
+the user to be used. It should be None if it&#8217;s not required to
+access with a user</li>
+<li><strong>password</strong> &#8211; if the proxy has authentication this param sets
+the password to be used. It should be None if it&#8217;s not required to
+access with a password</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.NetworkAccessManager.removeProxy">
+<tt class="descname">removeProxy</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager.removeProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the proxy configuration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.NetworkAccessManager.setAuthCredentials">
+<tt class="descname">setAuthCredentials</tt><big>(</big><em>user</em>, <em>password</em><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager.setAuthCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets or update the auth credentials.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>user</strong> &#8211; the username used for the authentication</li>
+<li><strong>password</strong> &#8211; the password used for the authentication</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="papersize-content">
+<h2>PaperSize Content:<a class="headerlink" href="#papersize-content" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ghost.PaperSize">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">PaperSize</tt><big>(</big><em>width</em>, <em>height</em>, <em>margin</em>, <em>orientation=None</em>, <em>page_type=None</em><big>)</big><a class="headerlink" href="#ghost.PaperSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class tells to the PdfPrinter how to render the webpage</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>width</strong> &#8211; An int representing the width of the page</li>
+<li><strong>height</strong> &#8211; An int representing the height of the page</li>
+<li><strong>margin</strong> &#8211; a tuple of ints representing the margins of the page
+(margin_left, margin_top, margin_right, margin_bottom)</li>
+<li><strong>orientation</strong> &#8211; landscape | portrait. This option only makes
+sense if page_type it&#8217;s not None</li>
+<li><strong>page_type</strong> &#8211; The format of the page, it can be :
+A0|A1|A2|A3|A4|A5|A6|A7|A8|A9|B0|B1|B2|B3|B4|B5|B6|B7|
+B8|B9|B10|C5E|Comm10E|DLE|Executive|Folio|Ledger|
+Legal|Letter|Tabloid|</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -154,6 +695,8 @@ experience faster than ever. Let&#8217;s see another example:</p>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#ghost-class">Ghost Class</a><ul>
+<li><a class="reference internal" href="#networkaccessmanager-content">NetworkAccessManager Content:</a></li>
+<li><a class="reference internal" href="#papersize-content">PaperSize Content:</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -187,6 +730,9 @@ experience faster than ever. Let&#8217;s see another example:</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li><a href="#">Ghost.py 0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
