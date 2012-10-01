@@ -10,3 +10,9 @@ dist
 
 *.komodoproject
 test_scripts
+ghost/ghost
+
+tests/tests_scripts/ghost
+
+tests/tests_scripts/pdf.py
+ghost/docs/*
