@@ -15,6 +15,7 @@ except ImportError:
     except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
 
+from NetworkMonitoring import NetworkMonitoring
 
 class NetworkAccessManager(QNetworkAccessManager):
     """NetworkAccessManager manages a QNetworkAccessManager. It's
@@ -43,9 +44,12 @@ class NetworkAccessManager(QNetworkAccessManager):
         cache.setMaximumCacheSize(cache_size * 1024 * 1024)
         self.setCache(cache)
         
+        self.networkMonitoring = NetworkMonitoring()
         # Manages the authentication for the proxy
         self.proxyAuthenticationRequired.connect(self._authenticateProxy)
         self.authenticationRequired.connect(self._authenticate)
+        
+        self.finished.connect(self._add_resource_finished)
         
     def configureProxy(self, host, port, user=None, password=None):
         """Add a proxy configuration for the Network Requests.
@@ -116,4 +120,13 @@ class NetworkAccessManager(QNetworkAccessManager):
             if unicode(request.url().toString()).endswith(ext):
                 return super(NetworkAccessManager, self).createRequest(op, QNetworkRequest(QUrl()), device)
         
-        return super(NetworkAccessManager, self).createRequest(op, request, device)
+        reply = super(NetworkAccessManager, self).createRequest(op, request, device)
+        self._add_resource(reply)
+        return reply
+    
+    def _add_resource(self, reply, isStarting=True):
+        self.networkMonitoring.add_resource(reply)
+    
+    def _add_resource_finished(self, reply):
+        self.networkMonitoring.add_resource_finished(reply)
+        

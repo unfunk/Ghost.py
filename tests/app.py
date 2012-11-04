@@ -112,6 +112,11 @@ def send_pdf():
         data = f.read()
     return Response(data, headers=h)
 
+
+@app.route('/network_monitoring')
+def network_monitoring():
+    return render_template('local_resource.html')
+
 @app.route('/no-cache-js')
 def no_cache_js():
     h = Headers()
