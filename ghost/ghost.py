@@ -196,7 +196,15 @@ def client_utils_required(func):
 
 
 class HttpResource(object):
-    """Represents an HTTP resource.
+    """
+        Represents an HTTP resource.
+        
+        url
+        content
+        is_from_cache
+        http_status
+        request_headers
+        reponse_headers
     """
     def __init__(self, reply, cache, content=None):
         self.url = reply.url().toString()
@@ -217,9 +225,14 @@ class HttpResource(object):
         self.http_status = reply.attribute(
             QNetworkRequest.HttpStatusCodeAttribute)
         Logger.log("Resource loaded: %s %s" % (self.url, self.http_status))
-        self.headers = {}
+        
+        self.request_headers = {}
+        for header in reply.request().rawHeaderList():
+            self.request_headers[unicode(header)] = unicode(reply.request().rawHeader(header))
+            
+        self.response_headers = {}
         for header in reply.rawHeaderList():
-            self.headers[unicode(header)] = unicode(reply.rawHeader(header))
+            self.response_headers[unicode(header)] = unicode(reply.rawHeader(header))
         self._reply = reply
 
 
@@ -545,7 +558,12 @@ class Ghost(object):
             self.webview.close()
         except:
             raise Exception("no webview to close")
-
+    
+    def test(self):
+        url = unicode(self.page.currentFrame().url().toString())
+        title = unicode(self.page.currentFrame().title())
+        return self.manager.networkMonitoring.dump(url, title)
+    
     def open(self, address, method='get', headers={}, auth=None,
             wait_onload_event=True):
         """Opens a web page.

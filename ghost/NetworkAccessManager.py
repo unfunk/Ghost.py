@@ -122,6 +122,7 @@ class NetworkAccessManager(QNetworkAccessManager):
         
         reply = super(NetworkAccessManager, self).createRequest(op, request, device)
         self._add_resource(reply)
+        
         return reply
     
     def _add_resource(self, reply, isStarting=True):
