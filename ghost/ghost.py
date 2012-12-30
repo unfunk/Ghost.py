@@ -562,10 +562,8 @@ class Ghost(object):
         except:
             raise Exception("no webview to close")
     
-    def get_network_monitor_dump(self):
-        url = unicode(self.page.currentFrame().url().toString())
-        title = unicode(self.page.currentFrame().title())
-        return self.manager.networkMonitoring.dump(url, title)
+    def get_network_monitor(self):
+        return self.manager.networkMonitoring
     
     def open(self, address, method='get', headers={}, auth=None,
             wait_onload_event=True):

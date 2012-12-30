@@ -1,3 +1,7 @@
+"""
+    TODO: Add support for the tag "timings".
+    TODO: Add support for iso8601
+"""
 try:
     from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 except ImportError:
@@ -16,30 +20,20 @@ class NetworkMonitor(object):
         We use the fllowing HAR specification
         http://www.softwareishard.com/blog/har-12-spec/
     """
-    _entries = []
-    _pages = {}
     
     def __init__(self):
         self._resources = {}
+        self._pages = {}
             
     def _get_time_now(self):
-        #return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
-        #return "2009-04-16T12:07:25.123+01:00"
-        return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
+        return self._parse_time(datetime.datetime.now())
     
     def _parse_time(self, time):
-        #millis = int(round(time.time() * 1000))
-        #print millis
-        #return time.strftime("%Y-%m-%dT%H:%M:%S.%f:+00:00")
-        #return "2009-04-16T12:07:25.123+01:00"
         return time.strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
-    
-    def _get_milliseconds(self, timedelta):
-        return (timedelta.days * 24 * 60 * 60) + (timedelta.seconds)
     
     def _md5_name(self, url):
         m = hashlib.md5()
-        m.update(str(url))
+        m.update(str(url.encode("utf-8")))
         return m.hexdigest()
     
     def _get_operation_name(self, operation):
@@ -64,14 +58,13 @@ class NetworkMonitor(object):
     
     def _get_list_of_query_items(self, resource):
         items = []
-        pairs = resource.url().queryItems()
-        for i in range(0, len(pairs), 2):
+        qi = resource.url().queryItems()
+        for i in qi:
             items.append({
-                "name": unicode(pairs[i]),
-                "value": unicode(pairs[i+1]),
+                "name": unicode(i[0]),
+                "value": unicode(i[1]),
                 "comment": ""
             })
-        
         return items
     
     def _get_list_of_cookies(self, resource):
@@ -82,7 +75,17 @@ class NetworkMonitor(object):
                 ret.append(unicode(h.toRawForm()))
         return ret
     
-            
+    def _add_and_get_page(self, resource):
+        url = unicode(resource.request().originatingObject().url().toString())
+        key = "pk_{0}".format(url)
+        
+        if key not in self._pages:
+            title = unicode(resource.request().originatingObject().title())
+            self._pages[key] = dict(url=url,
+                                    entries=[],
+                                    title=title)
+        return key
+    
     def add_resource(self, resource):
         url = self._md5_name(unicode(resource.url().toString()))
         if url not in self._resources:
@@ -94,22 +97,13 @@ class NetworkMonitor(object):
             "url": unicode(resource.url().toString())
         }
     
-    def add_and_get_page(self, resource):
-        url = unicode(resource.request().originatingObject().url().toString())
-        key = "pk_{0}".format(url)
-        
-        if key not in self._pages:
-            self._pages[key] = dict(url=url, entries=[])
-        return key
-    
     def add_resource_finished(self, resource):
-        pageKey = self.add_and_get_page(resource)
+        pageKey = self._add_and_get_page(resource)
         url = self._md5_name(unicode(resource.url().toString()))
         request = resource.request()
         startReply = self._resources[url]["start"]
         t = int((time.time() - startReply["stime"]) * 1000)
         
-        print unicode(resource.url().toString())
         entry = {
             "startedDateTime": self._parse_time(startReply["time"]),
             "time": t,
@@ -152,7 +146,7 @@ class NetworkMonitor(object):
         self._pages[pageKey]["entries"].append(entry)
 
             
-    def dump(self, address, title):
+    def dump(self):
         har = {
             "log": {
                 "version" : VERSION,
@@ -177,11 +171,15 @@ class NetworkMonitor(object):
                 {
                     "startedDateTime": self._parse_time(datetime.datetime.now()),
                     "id":  pk,
-                    "title": title,
+                    "title": self._pages[pk]["title"],
                     "pageTimings": {},
                     "comment": ""
                 })
             har["log"]["entries"] += self._pages[pk]["entries"]
         
         return har
+    
+    def reset(self):
+        self._resources = {}
+        self._pages = {}
         
