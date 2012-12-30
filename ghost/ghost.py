@@ -263,6 +263,8 @@ class Ghost(object):
     :param download_images: Indicate if the browser download or not the images
     :param prevent_download: A List of extensions of the files that you want
         to prevent from downloading
+    :param network_monitor: A class that handles all the network data. If
+        it's None (default) the network monitoring it's disabled
     """
     _alert = None
     _confirm_expected = None
@@ -274,7 +276,7 @@ class Ghost(object):
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
-            download_images=True, prevent_download=[]):
+            download_images=True, prevent_download=[], network_monitor=None):
         
         self.pdf_engine = Pdf()
         self.http_resources = []
@@ -319,7 +321,8 @@ class Ghost(object):
         self.page.loadProgress.connect(self._page_load_progress)
         self.page.unsupportedContent.connect(self._unsupported_content)
         self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size,
-                                            prevent_download=prevent_download)
+                                            prevent_download=prevent_download,
+                                            network_monitor=network_monitor)
         self.manager.finished.connect(self._request_ended)
         self.cache = self.manager.cache()
         self.page.setNetworkAccessManager(self.manager)
@@ -559,7 +562,7 @@ class Ghost(object):
         except:
             raise Exception("no webview to close")
     
-    def test(self):
+    def get_network_monitor_dump(self):
         url = unicode(self.page.currentFrame().url().toString())
         title = unicode(self.page.currentFrame().title())
         return self.manager.networkMonitoring.dump(url, title)

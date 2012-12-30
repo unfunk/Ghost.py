@@ -31,10 +31,12 @@ class NetworkAccessManager(QNetworkAccessManager):
     _auth = ("dummy", "dummy2")
     _authIntent = 0
     _authProxy = ("dummy", "dummy2")
+    networkMonitoring = None
     
     def __init__(self, *args, **kwargs):
         cache_dir = kwargs.pop("cache_dir", "/tmp/ghost.py")
         cache_size = kwargs.pop("cache_size", 0)
+        network_monitor = kwargs.pop("network_monitor", None)
         self._prevent_download = kwargs.pop("prevent_download", [])
         
         super(NetworkAccessManager, self).__init__(*args, **kwargs)
@@ -44,12 +46,13 @@ class NetworkAccessManager(QNetworkAccessManager):
         cache.setMaximumCacheSize(cache_size * 1024 * 1024)
         self.setCache(cache)
         
-        self.networkMonitoring = NetworkMonitoring()
+        if network_monitor is not None:
+            self.networkMonitoring = network_monitor()
+            self.finished.connect(self._add_resource_finished)
         # Manages the authentication for the proxy
         self.proxyAuthenticationRequired.connect(self._authenticateProxy)
         self.authenticationRequired.connect(self._authenticate)
         
-        self.finished.connect(self._add_resource_finished)
         
     def configureProxy(self, host, port, user=None, password=None):
         """Add a proxy configuration for the Network Requests.
@@ -121,7 +124,9 @@ class NetworkAccessManager(QNetworkAccessManager):
                 return super(NetworkAccessManager, self).createRequest(op, QNetworkRequest(QUrl()), device)
         
         reply = super(NetworkAccessManager, self).createRequest(op, request, device)
-        self._add_resource(reply)
+        
+        if self.networkMonitoring is not None:
+            self._add_resource(reply)
         
         return reply
     

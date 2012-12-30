@@ -7,7 +7,6 @@ from unittest import TestCase
 from wsgiref.simple_server import make_server
 from ghost import Ghost
 
-
 class ServerThread(threading.Thread):
     """Starts a Tornado HTTPServer from given WSGI application.
 
