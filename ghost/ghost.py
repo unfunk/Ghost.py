@@ -455,9 +455,13 @@ class Ghost(object):
 
     @property
     def content(self):
-        """Returns current frame HTML as a string."""
+        """Returns main_frame HTML as a string."""
         return unicode(self.main_frame.toHtml())
-
+    
+    def get_current_frame_content(self):
+        """Returns current frame HTML as a string."""
+        return unicode(self.page.currentFrame().toHtml())
+    
     @property
     def cookies(self):
         """Returns all cookies."""
@@ -490,7 +494,7 @@ class Ghost(object):
 
         :param string: The element selector.
         """
-        return not self.main_frame.findFirstElement(selector).isNull()
+        return not self.page.currentFrame().findFirstElement(selector).isNull()
 
     def exit(self):
         """Exits application and relateds."""
@@ -565,7 +569,7 @@ class Ghost(object):
         else:
             if self.ghostInit.receivers(SIGNAL("dom_is_ready(bool)")) > 0:
                 self.ghostInit.dom_is_ready.disconnect(self._page_loaded)
-            Logger.log("Waiting until OnLoad event is fired")
+            #Logger.log("Waiting until OnLoad event is fired")
         
         body = QByteArray()
         try:
@@ -712,6 +716,7 @@ class Ghost(object):
         """
         self.wait_for(lambda: self.loaded and len(self._unsupported_files.keys()) == 0,
             'Unable to load requested page')
+        
         resources = self._release_last_resources()
         page = None
         url = self.main_frame.url().toString()
@@ -735,7 +740,7 @@ class Ghost(object):
 
         :param text: The text to wait for.
         """
-        self.wait_for(lambda: text in self.content,
+        self.wait_for(lambda: text in self.page.currentFrame().toPlainText(),
             'Can\'t find "%s" in current frame' % text)
         return True, self._release_last_resources()
     
@@ -772,8 +777,9 @@ class Ghost(object):
         :param reply: The QNetworkReply object.
         """
         if reply.url() == self.page.currentFrame().url():
-            Logger.log("Injecting DOMReady code")
-            self._insert_dom_ready_code()
+            pass
+            ##Logger.log("Injecting DOMReady code")
+            ##self._insert_dom_ready_code()
         
         content = None
         if unicode(reply.url()) in self._unsupported_files:

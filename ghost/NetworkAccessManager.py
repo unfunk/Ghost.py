@@ -47,6 +47,9 @@ class NetworkAccessManager(QNetworkAccessManager):
         self.proxyAuthenticationRequired.connect(self._authenticateProxy)
         self.authenticationRequired.connect(self._authenticate)
         
+        # Handles redirects
+        self.finished.connect(self._replyFinished)
+        
     def configureProxy(self, host, port, user=None, password=None):
         """Add a proxy configuration for the Network Requests.
         
@@ -108,7 +111,6 @@ class NetworkAccessManager(QNetworkAccessManager):
         # this NetworkAccessManager has the same Cache Policy. It's
         # Neccesary to move this to the Request or add some different
         # mechanism here.
-        
         request.setAttribute(request.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
         #FIXME: add regular expressions to avoid the loop
         #FIXME: It would be nice to use content type instead of the extension
@@ -117,3 +119,38 @@ class NetworkAccessManager(QNetworkAccessManager):
                 return super(NetworkAccessManager, self).createRequest(op, QNetworkRequest(QUrl()), device)
         
         return super(NetworkAccessManager, self).createRequest(op, request, device)
+    
+        
+    def _replyFinished(self, reply):
+        """Reply is finished!
+            We'll ask for the reply about the Redirection attribute
+            http://doc.trolltech.com/qnetworkrequest.html#Attribute-enum
+        """
+        possibleRedirectUrl = reply.attribute(QNetworkRequest.RedirectionTargetAttribute)
+        # We'll deduct if the redirection is valid in the redirectUrl function
+        oldUrl = reply.url()
+        urlRedirectedTo = self._redirectUrl(possibleRedirectUrl, oldUrl)
+        
+        # If the URL is not empty, we're being redirected.
+        if not urlRedirectedTo.isEmpty():
+            # We'll do another request to the redirection url.
+            self.get(QNetworkRequest(urlRedirectedTo))
+        else:
+            # We weren't redirected anymore
+            #so we arrived to the final destination...
+            urlRedirectedTo.clear()
+            
+        reply.deleteLater()
+
+
+    def _redirectUrl(self, possibleRedirectUrl, oldRedirectUrl):
+        """
+            Check if the URL is empty and
+            that we aren't being fooled into a infinite redirect loop.
+            We could also keep track of how many redirects we have been to
+            and set a limit to it, but we'll leave that to you.
+        """
+        redirectUrl = QUrl()
+        if possibleRedirectUrl is not None and not possibleRedirectUrl.isEmpty() and possibleRedirectUrl != oldRedirectUrl:
+            redirectUrl = possibleRedirectUrl
+        return redirectUrl
