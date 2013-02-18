@@ -6,6 +6,7 @@ import codecs
 import json
 import logging
 import subprocess
+import random
 
 from functools import wraps
 try:
@@ -47,121 +48,6 @@ class Logger(logging.Logger):
         getattr(logger, level)("%s: %s", sender, message)
 
 
-class GhostWebPage(QWebPage):
-    """Overrides QtWebKit.QWebPage in order to intercept some graphical
-    behaviours like alert(), confirm().
-    Also intercepts client side console.log().
-    """
-    user_agent = ""
-    _windows = []
-    _main_window = None
-    removeWindowFromList = pyqtSignal(object)
-    
-    def __init__(self, *args, **kargs):
-        self._main_window = kargs.pop("main_window", None)
-        super(GhostWebPage, self).__init__(*args, **kargs)
-        
-        self.windowCloseRequested.connect(self._closeWindow)
-        self.removeWindowFromList.connect(self._removeWindowFromList)
-        
-    def chooseFile(self, frame, suggested_file=None):
-        return Ghost._upload_file
-
-    def javaScriptConsoleMessage(self, message, line, source):
-        """Prints client console message in current output stream."""
-        super(GhostWebPage, self).javaScriptConsoleMessage(message, line,
-            source)
-        log_type = "error" if "Error" in message else "info"
-        Logger.log("%s(%d): %s" % (source or '<unknown>', line, message),
-        sender="Frame", level=log_type)
-
-    def javaScriptAlert(self, frame, message):
-        """Notifies ghost for alert, then pass."""
-        Ghost._alert = message
-        Logger.log("alert('%s')" % message, sender="Frame")
-
-    def javaScriptConfirm(self, frame, message):
-        """Checks if ghost is waiting for confirm, then returns the right
-        value.
-        """
-        if Ghost._confirm_expected is None:
-            raise Exception('You must specified a value to confirm "%s"' %
-                message)
-        confirmation, callback = Ghost._confirm_expected
-        Ghost._confirm_expected = None
-        Logger.log("confirm('%s')" % message, sender="Frame")
-        if callback is not None:
-            return callback()
-        return confirmation
-
-    def javaScriptPrompt(self, frame, message, defaultValue, result=None):
-        """Checks if ghost is waiting for prompt, then enters the right
-        value.
-        """
-        if Ghost._prompt_expected is None:
-            raise Exception('You must specified a value for prompt "%s"' %
-                message)
-        result_value, callback = Ghost._prompt_expected
-        Logger.log("prompt('%s')" % message, sender="Frame")
-        if callback is not None:
-            result_value = callback()
-        if result_value == '':
-            Logger.log("'%s' prompt filled with empty string" % message,
-                level='warning')
-        Ghost._prompt_expected = None
-        if result is None:
-            # PySide
-            return True, result_value
-        result.append(result_value)
-        return True
-
-    def setUserAgent(self, user_agent):
-        self.user_agent = user_agent
-
-    def userAgentForUrl(self, url):
-        return self.user_agent
-    
-    def acceptNavigationRequest(self, frame, request, ttype):
-        self._lastUrl = request.url()
-        return True
-    
-    def createWindow(self, ttype):
-        webView = QtWebKit.QWebView()
-        newWeb = GhostWebPage(Ghost._app, main_window=self)
-                
-        body = QByteArray()
-        try:
-            method = getattr(QNetworkAccessManager, "GetOperation")
-        except AttributeError:
-            raise Exception("Invalid http method %s" % method)
-        request = QNetworkRequest(QUrl(self._lastUrl))
-        request.CacheLoadControl(QNetworkRequest.AlwaysNetwork)
-        
-        newWeb.currentFrame().load(request, method, body)
-        newWeb.setViewportSize(QSize(800, 600))
-        
-        self._windows.append(newWeb)
-        
-        return newWeb
-    
-    def _closeWindow(self):
-        if self._main_window is not None:
-            self._main_window.removeWindowFromList.emit(self)
-    
-    @pyqtSlot(object)
-    def _removeWindowFromList(self, windowClosed):
-        self._windows.remove(windowClosed)
-    
-    def switch_to_sub_window(self, index):
-        """Change the focus to the sub window (popup)
-        :param index: The index of the window, in the order that the
-            window was opened
-        """
-        if len(self._windows) > index:
-            self._windows[index].mainFrame().setFocus()
-            return self._windows[index]                    
-        return None
-        
         
 def can_load_page(func):
     """Decorator that specifies if user can expect page loading from
@@ -194,6 +80,584 @@ def client_utils_required(func):
         return func(self, *args, **kwargs)
     return wrapper
 
+
+class GhostWebPage(QWebPage):
+    """Overrides QtWebKit.QWebPage in order to intercept some graphical
+    behaviours like alert(), confirm().
+    Also intercepts client side console.log().
+    """
+    user_agent = ""
+    removeWindowFromList = pyqtSignal(object)
+    
+    _alert = None
+    _confirm_expected = None
+    _prompt_expected = None
+    _upload_file = None
+    _app = None
+    
+    def __init__(self, app, network_manager, wait_timeout=20, wait_callback=None,
+                viewport_size=(800, 600), user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2',
+                log_level=30, download_images=True, create_page_callback=None, is_popup=False,
+                *args, **kargs):
+        
+        super(GhostWebPage, self).__init__(parent=app)
+        self._app = app
+        self.pdf_engine = Pdf()
+        self.http_resources = []
+        self.wait_timeout = wait_timeout
+        self.wait_callback = wait_callback
+        self.loaded = True
+        self.create_page_callback = create_page_callback
+        self.is_popup = is_popup
+        
+        # Internal library object
+        self.ghostInit =  GhostInit()
+        
+        self.setForwardUnsupportedContent(True)
+        self.settings().setAttribute(QtWebKit.QWebSettings.AutoLoadImages, download_images)
+        self.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
+        self.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
+        
+        self.set_viewport_size(*viewport_size)
+
+        # Page signals
+        self.loadFinished.connect(self._page_loaded)
+        self.loadStarted.connect(self._page_load_started)
+        self.loadProgress.connect(self._page_load_progress)
+        self.unsupportedContent.connect(self._unsupported_content)
+        self.manager = network_manager
+        self.setNetworkAccessManager(self.manager)
+        self.manager.finished.connect(self._request_ended)
+        # User Agent
+        self.setUserAgent(user_agent)
+
+        self.main_frame = self.mainFrame()
+        self._unsupported_files = {}
+        self.windowCloseRequested.connect(self._closeWindow)
+        
+        logger.setLevel(log_level)
+        
+    
+    class confirm:
+        """Statement that tells Ghost how to deal with javascript confirm().
+
+        :param confirm: A bollean that confirm.
+        :param callable: A callable that returns a boolean for confirmation.
+        """
+        def __init__(self, confirm=True, callback=None):
+            self.confirm = confirm
+            self.callback = callback
+
+        def __enter__(self):
+            GhostWebPage._confirm_expected = (self.confirm, self.callback)
+
+        def __exit__(self, type, value, traceback):
+            GhostWebPage._confirm_expected = None
+    
+    
+    class prompt:
+        """Statement that tells Ghost how to deal with javascript prompt().
+
+        :param value: A string value to fill in prompt.
+        :param callback: A callable that returns the value to fill in.
+        """
+        def __init__(self, value='', callback=None):
+            self.value = value
+            self.callback = callback
+
+        def __enter__(self):
+            GhostWebPage._prompt_expected = (self.value, self.callback)
+
+        def __exit__(self, type, value, traceback):
+            GhostWebPage._prompt_expected = None     
+            
+            
+            
+    def chooseFile(self, frame, suggested_file=None):
+        return self._upload_file
+
+    def javaScriptConsoleMessage(self, message, line, source):
+        """Prints client console message in current output stream."""
+        super(GhostWebPage, self).javaScriptConsoleMessage(message, line,
+            source)
+        log_type = "error" if "Error" in message else "info"
+        Logger.log("%s(%d): %s" % (source or '<unknown>', line, message),
+        sender="Frame", level=log_type)
+
+    def javaScriptAlert(self, frame, message):
+        """Notifies ghost for alert, then pass."""
+        self._alert = message
+        Logger.log("alert('%s')" % message, sender="Frame")
+
+    def javaScriptConfirm(self, frame, message):
+        """Checks if ghost is waiting for confirm, then returns the right
+        value.
+        """
+        if self._confirm_expected is None:
+            raise Exception('You must specified a value to confirm "%s"' %
+                message)
+        
+        confirmation, callback = self._confirm_expected
+        self._confirm_expected = None
+        Logger.log("confirm('%s')" % message, sender="Frame")
+        if callback is not None:
+            return callback()
+        return confirmation
+
+    def javaScriptPrompt(self, frame, message, defaultValue, result=None):
+        """Checks if ghost is waiting for prompt, then enters the right
+        value.
+        """
+        if self._prompt_expected is None:
+            raise Exception('You must specified a value for prompt "%s"' %
+                message)
+        result_value, callback = self._prompt_expected
+        Logger.log("prompt('%s')" % message, sender="Frame")
+        if callback is not None:
+            result_value = callback()
+        if result_value == '':
+            Logger.log("'%s' prompt filled with empty string" % message,
+                level='warning')
+        self._prompt_expected = None
+        if result is None:
+            # PySide
+            return True, result_value
+        result.append(result_value)
+        return True
+
+    def setUserAgent(self, user_agent):
+        self.user_agent = user_agent
+
+    def userAgentForUrl(self, url):
+        return self.user_agent
+    
+    def acceptNavigationRequest(self, frame, request, ttype):
+        self._lastUrl = request.url()
+        return True
+    
+    def createWindow(self, ttype):
+        page = None
+        if self.create_page_callback is not None:
+            page, name = self.create_page_callback(is_popup=True)
+            page.open(self._lastUrl)
+            
+        return page
+    
+    def _closeWindow(self):
+        #if self._main_window is not None:
+        self.removeWindowFromList.emit(self)
+        
+    def switch_to_sub_window(self, index):
+        """Change the focus to the sub window (popup)
+        :param index: The index of the window, in the order that the
+            window was opened
+        """
+        if len(self._windows) > index:
+            self._windows[index].mainFrame().setFocus()
+            return self._windows[index]                    
+        return None
+    
+    def capture(self, region=None, selector=None,
+            format=QImage.Format_ARGB32_Premultiplied):
+        """Returns snapshot as QImage.
+
+        :param region: An optional tupple containing region as pixel
+            coodinates.
+        :param selector: A selector targeted the element to crop on.
+        :param format: The output image format.
+        """
+        if region is None and selector is not None:
+            region = self.region_for_selector(selector)
+        if region:
+            x1, y1, x2, y2 = region
+            w, h = (x2 - x1), (y2 - y1)
+            image = QImage(QSize(x2, y2), format)
+            painter = QPainter(image)
+            self.currentFrame().render(painter)
+            painter.end()
+            image = image.copy(x1, y1, w, h)
+        else:
+            image = QImage(self.viewportSize(), format)
+            painter = QPainter(image)
+            self.currentFrame().render(painter)
+            painter.end()
+        return image   
+    
+    
+    def capture_to(self, path, region=None, selector=None,
+        format=QImage.Format_ARGB32_Premultiplied):
+        """Saves snapshot as image.
+
+        :param path: The destination path.
+        :param region: An optional tupple containing region as pixel
+            coodinates.
+        :param selector: A selector targeted the element to crop on.
+        :param format: The output image format.
+            The available formats can be found here http://qt-project.org/doc/qt-4.8/qimage.html#Format-enum
+            There is also a "pdf" format that will render the page into a pdf file
+        """
+        if str(format).startswith("pdf"):
+            return self.pdf_engine.render_pdf(self, path)
+        else:
+            self.capture(region=region, format=format,
+                selector=selector).save(path)
+            
+    
+    @client_utils_required
+    def region_for_selector(self, selector):
+        """Returns frame region for given selector as tupple.
+
+        :param selector: The targeted element.
+        """
+        geo = self.currentFrame().findFirstElement(selector).geometry()
+        try:
+            region = (geo.left(), geo.top(), geo.right(), geo.bottom())
+        except:
+            raise Exception("can't get region for selector '%s'" % selector)
+        return region
+    
+    
+    @client_utils_required
+    @can_load_page
+    def click(self, selector):
+        """Click the targeted element.
+
+        :param selector: A CSS3 selector to targeted element.
+        """
+        if not self.exists(selector):
+            raise Exception("Can't find element to click")
+        return self.evaluate('GhostUtils.click("%s");' % selector)
+    
+    
+    @property
+    def content(self):
+        """Returns main_frame HTML as a string."""
+        return unicode(self.main_frame.toHtml())
+
+    
+    def get_current_frame_content(self):
+        """Returns current frame HTML as a string."""
+        return unicode(self.currentFrame().toHtml())
+    
+    @can_load_page
+    def evaluate(self, script):
+        """Evaluates script in page frame.
+
+        :param script: The script to evaluate.
+        """
+        return self.currentFrame().evaluateJavaScript("%s" % script)
+
+    def evaluate_js_file(self, path, encoding='utf-8'):
+        """Evaluates javascript file at given path in current frame.
+        Raises native IOException in case of invalid file.
+
+        :param path: The path of the file.
+        :param encoding: The file's encoding.
+        """
+        self.evaluate(codecs.open(path, encoding=encoding).read())
+
+    def exists(self, selector):
+        """Checks if element exists for given selector.
+
+        :param string: The element selector.
+        """
+        return not self.currentFrame().findFirstElement(selector).isNull()
+    
+    
+    @can_load_page
+    def fill(self, selector, values):
+        """Fills a form with provided values.
+
+        :param selector: A CSS selector to the target form to fill.
+        :param values: A dict containing the values.
+        """
+        if not self.exists(selector):
+            raise Exception("Can't find form")
+        
+        for field in values:
+            self.set_field_value("%s [name=%s]" % (selector, field),
+                values[field])
+        return True
+
+    @client_utils_required
+    @can_load_page
+    def fire_on(self, selector, method):
+        """Call method on element matching given selector.
+
+        :param selector: A CSS selector to the target element.
+        :param method: The name of the method to fire.
+        :param expect_loading: Specifies if a page loading is expected.
+        """
+        return self.evaluate('GhostUtils.fireOn("%s", "%s");' % (
+            selector, method))
+
+    def global_exists(self, global_name):
+        """Checks if javascript global exists.
+
+        :param global_name: The name of the global.
+        """
+        return self.evaluate('!(typeof %s === "undefined");' %
+            global_name)
+    
+    
+    def open(self, address, method='get', headers={}, auth=None,
+            wait_onload_event=True, wait_for_loading=True):
+        """Opens a web page.
+
+        :param address: The resource URL.
+        :param method: The Http method.
+        :param headers: An optional dict of extra request hearders.
+        :param auth: An optional tupple of HTTP auth (username, password).
+        :param wait_onload_event: If it's set to True waits until the OnLoad event from
+            the main page is fired. Otherwise wait until the Dom is ready.
+        :return: Page resource, All loaded resources.
+        """
+        if not wait_onload_event:
+            if self.ghostInit.receivers(SIGNAL("dom_is_ready(bool)")) == 0:
+                self.ghostInit.dom_is_ready.connect(self._page_loaded)
+            Logger.log("Waiting until OnReady event is fired")
+        else:
+            if self.ghostInit.receivers(SIGNAL("dom_is_ready(bool)")) > 0:
+                self.ghostInit.dom_is_ready.disconnect(self._page_loaded)
+            #Logger.log("Waiting until OnLoad event is fired")
+        
+        body = QByteArray()
+        
+        try:
+            method = getattr(QNetworkAccessManager,
+                "%sOperation" % method.capitalize())
+        except AttributeError:
+            raise Exception("Invalid http method %s" % method)
+        request = QNetworkRequest(QUrl(address))
+        request.CacheLoadControl(QNetworkRequest.AlwaysNetwork)
+        for header in headers:
+            request.setRawHeader(header, headers[header])
+        
+        if auth is not None:
+            self.manager.setAuthCredentials(auth[0], auth[1])
+        
+        self.main_frame.load(request, method, body)
+        
+        self.loaded = False
+        if not wait_for_loading:
+            return self.get_loaded_page()
+        return self.wait_for_page_loaded()
+    
+    def download(self, path, address, **kwards):
+        page, resources = self.open(address, **kwards)
+        
+        with open(path, "wb") as f:
+            f.write(page.content)
+        
+        return page, resources
+    
+    
+    @can_load_page
+    @client_utils_required
+    def set_field_value(self, selector, value, blur=True):
+        """Sets the value of the field matched by given selector.
+
+        :param selector: A CSS selector that target the field.
+        :param value: The value to fill in.
+        :param blur: An optional boolean that force blur when filled in.
+        """
+        def _set_text_value(selector, value):
+            return self.evaluate(
+                'document.querySelector("%s").value=%s;' %
+                    (selector, json.dumps(value)))
+
+        res, resources = None, []
+
+        element = self.main_frame.findFirstElement(selector)
+        if element.isNull():
+            raise Exception('can\'t find element for %s"' % selector)
+        self.fire_on(selector, 'focus')
+        if element.tagName() in ["TEXTAREA", "SELECT"]:
+            res = _set_text_value(selector, value)
+        elif element.tagName() == "INPUT":
+            if element.attribute('type') in ["color", "date", "datetime",
+                "datetime-local", "email", "hidden", "month", "number",
+                "password", "range", "search", "tel", "text", "time",
+                "url", "week"]:
+                res = _set_text_value(selector, value)
+            elif element.attribute('type') == "checkbox":
+                res = self.evaluate(
+                    'GhostUtils.setCheckboxValue("%s", %s);' %
+                        (selector, json.dumps(value)))
+            elif element.attribute('type') == "radio":
+                res = self.evaluate(
+                    'GhostUtils.setRadioValue("%s", %s);' %
+                        (selector, json.dumps(value)))
+            elif element.attribute('type') == "file":
+                self._upload_file = value
+                res = self.click(selector)
+                self._upload_file = None
+        else:
+            raise Exception('unsuported field tag')
+        if blur:
+            self.fire_on(selector, 'blur')
+            
+        return res
+
+    def set_viewport_size(self, width, height):
+        """Sets the page viewport size.
+
+        :param width: An integer that sets width pixel count.
+        :param height: An integer that sets height pixel count.
+        """
+        self.setViewportSize(QSize(width, height))
+    
+    def wait_for(self, condition, timeout_message):
+        """Waits until condition is True.
+
+        :param condition: A callable that returns the condition.
+        :param timeout_message: The exception message on timeout.
+        """
+        started_at = time.time()
+        while not condition():
+            if time.time() > (started_at + self.wait_timeout):
+                raise Exception(timeout_message)
+            time.sleep(0.01)
+            self._app.processEvents()
+            if self.wait_callback is not None:
+                self.wait_callback()
+
+    def wait_for_alert(self):
+        """Waits for main frame alert().
+        """
+        self.wait_for(lambda: self._alert is not None,
+            'User has not been alerted.')
+        msg = self._alert
+        self._alert = None
+        return msg
+
+    def wait_for_page_loaded(self):
+        """Waits until page is loaded, assumed that a page as been requested.
+        """
+        self.wait_for(lambda: self.loaded and len(self._unsupported_files.keys()) == 0,
+            'Unable to load requested page')
+        
+        return self.get_loaded_page()
+    
+    def get_loaded_page(self):
+        if self.loaded and len(self._unsupported_files.keys()) == 0:
+            resources = self.http_resources
+            page = None
+            url = self.main_frame.url().toString()
+            
+            for resource in resources:
+                if url == resource.url:
+                    page = resource
+                    break
+            return page    
+        return None
+    
+    def wait_for_selector(self, selector):
+        """Waits until selector match an element on the frame.
+
+        :param selector: The selector to wait for.
+        """
+        self.wait_for(lambda: self.exists(selector),
+            'Can\'t find element matching "%s"' % selector)
+        return True
+
+    def wait_for_text(self, text):
+        """Waits until given text appear on main frame.
+
+        :param text: The text to wait for.
+        """
+        self.wait_for(lambda: text in self.currentFrame().toPlainText(),
+            'Can\'t find "%s" in current frame' % text)
+        return True
+    
+    def _page_load_progress(self, progress):
+        pass
+        
+    def _page_loaded(self, ok):
+        """Called back when page is loaded.
+        """
+        # FIXME: Check why ok == False when we are trying to load
+        # unsupported content
+        self.loaded = True
+
+    def _page_load_started(self):
+        """Called back when page load started.
+        """
+        self.loaded = False
+
+    def _release_last_resources(self):
+        """Releases last loaded resources.
+
+        :return: The released resources.
+        """
+        last_resources = self.http_resources
+        self.http_resources = []
+        return last_resources
+    
+    def release_last_resources(self):
+        return self._release_last_resources()
+    
+    def _insert_dom_ready_code(self):
+        self.mainFrame().addToJavaScriptWindowObject("GhostInit", self.ghostInit);
+        #self.page.mainFrame().addToJavaScriptWindowObject("ghost_frame", self.page.mainFrame());
+        self.evaluate_js_file(os.path.join(os.path.dirname(__file__), 'domready.js'))
+        
+    def _request_ended(self, reply):
+        """Adds an HttpResource object to http_resources.
+
+        :param reply: The QNetworkReply object.
+        """
+        if reply.url() == self.currentFrame().url():
+            Logger.log("Injecting DOMReady code")
+            self._insert_dom_ready_code()
+        
+        content = None
+        if unicode(reply.url()) in self._unsupported_files:
+            del self._unsupported_files[unicode(reply.url())]
+            content = reply.readAll()
+        
+        if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
+            cache = self.manager.cache()
+            self.http_resources.append(HttpResource(reply, cache, content))
+            
+    def _unsupported_content(self, reply):
+        """Adds an HttpResource object to http_resources with unsupported
+        content.
+
+        :param reply: The QNetworkReply object.
+        """
+        self._unsupported_files[unicode(reply.url())] = reply
+    
+    
+    def switch_to_frame(self, frameName=None):
+        """Change the focus to the indicated frame
+
+        :param frameName: The name of the frame
+        """
+        if frameName is None:
+            self.main_frame.setFocus()
+            return True
+        
+        for frame in self.currentFrame().childFrames():
+            if frame.frameName() == frameName:
+                frame.setFocus()
+                return True
+        return False
+    
+    def switch_to_frame_nro(self, nro=-1):
+        """Change the focus to the indicated frame
+
+        :param nro: Number of the frame
+        """
+        if nro == -1:
+            self.main_frame.setFocus()
+        
+        frames = self.currentFrame().childFrames()
+        if len(frames) <= (nro + 1):
+            frames[nro].setFocus()
+        
+        return nro is None or len(frames) < nro
+    
 
 class HttpResource(object):
     """Represents an HTTP resource.
@@ -234,6 +698,7 @@ class GhostInit(QtCore.QObject):
         Logger.log("Firing Dom Ready Signal")
         self.dom_is_ready.emit(True)
         
+        
 class Ghost(object):
     """Ghost manages a QWebPage.
 
@@ -251,26 +716,21 @@ class Ghost(object):
     :param prevent_download: A List of extensions of the files that you want
         to prevent from downloading
     """
-    _alert = None
-    _confirm_expected = None
-    _prompt_expected = None
-    _upload_file = None
     _app = None
-    _unsupported_files = {}
     
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
-            download_images=True, prevent_download=[]):
+            download_images=True, prevent_download=[], individual_cookies=False):
         
-        self.pdf_engine = Pdf()
-        self.http_resources = []
         self.user_agent = user_agent
         self.wait_timeout = wait_timeout
         self.wait_callback = wait_callback
-
-        self.loaded = True
-
+        self.viewport_size = viewport_size
+        self.log_level = log_level
+        self.display = display
+        self.individual_cookies = individual_cookies
+        
         if not sys.platform.startswith('win') and not 'DISPLAY' in os.environ\
                 and not hasattr(Ghost, 'xvfb'):
             try:
@@ -281,187 +741,103 @@ class Ghost(object):
                     'an X instance')
 
         self.display = display
-
         if not Ghost._app:
             Ghost._app = QApplication.instance() or QApplication(['ghost'])
-
-        self.page = GhostWebPage(Ghost._app)
-        # Internal library object
-        self.ghostInit =  GhostInit()
+        
+        #self.page = GhostWebPage(Ghost._app)
         
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
         QtWebKit.QWebSettings.setObjectCacheCapacities(0, 0, 0)
         
-        self.page.setForwardUnsupportedContent(True)
-        self.page.settings().setAttribute(QtWebKit.QWebSettings.AutoLoadImages, download_images)
-        self.page.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
-        self.page.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
-        #self.page.settings().setAttribute(QtWebKit.QWebSettings.OfflineWebApplicationCacheEnabled, True)
-        
-        self.set_viewport_size(*viewport_size)
-
-        # Page signals
-        self.page.loadFinished.connect(self._page_loaded)
-        self.page.loadStarted.connect(self._page_load_started)
-        self.page.loadProgress.connect(self._page_load_progress)
-        self.page.unsupportedContent.connect(self._unsupported_content)
-        self.manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size,
+        self.cache_dir = cache_dir
+        self.cache_size = cache_size
+        self.prevent_download = prevent_download
+        self.network_manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size,
                                             prevent_download=prevent_download)
-        self.manager.finished.connect(self._request_ended)
-        self.cache = self.manager.cache()
-        self.page.setNetworkAccessManager(self.manager)
+        self.cache = self.network_manager.cache()
+        self.network_managers = []
+        #self.page.setNetworkAccessManager(self.manager)
         
         # Cookie jar
         self.cookie_jar = QNetworkCookieJar()
-        self.manager.setCookieJar(self.cookie_jar)
-        # User Agent
-        self.page.setUserAgent(self.user_agent)
+        self.network_manager.setCookieJar(self.cookie_jar)
+        self.current_page = None
 
-        self.main_frame = self.page.mainFrame()
-        self.main_page = self.page
+        self._pages = []
         
         logger.setLevel(log_level)
-
-        if self.display:
-            self.webview = QtWebKit.QWebView()
-            self.webview.setPage(self.page)
-            self.webview.show()
 
     def __del__(self):
         self.exit()
     
-    def _insert_dom_ready_code(self):
-        self.page.mainFrame().addToJavaScriptWindowObject("GhostInit", self.ghostInit);
-        #self.page.mainFrame().addToJavaScriptWindowObject("ghost_frame", self.page.mainFrame());
-        self.evaluate_js_file(os.path.join(os.path.dirname(__file__), 'domready.js'))
+    def get_page(self, index):
+        """
+        """
+        page = None
+        if index in range(len(self._pages)):
+            page = self._pages[index]
         
-    def switch_to_sub_window(self, index):
+        return page
+        
+    def switch_to_page(self, index):
         """Change the focus to the indicated window
 
         :param nro: Number of the window
         """
-        page = self.page.switch_to_sub_window(index)
-        if page is not None:
-            self.page = page
-            self.main_frame = page.mainFrame()
+        page = self.get_page(index)
+        self.current_page = page
         
         return page
     
-    def switch_to_main_window(self):
-        """Change the focus to the main windows
-        """
-        self.page = self.main_page
-        self.main_frame = self.page
+    def remove_page(self, page):
+        self._remove_page(page)
         
-    def switch_to_frame(self, frameName=None):
-        """Change the focus to the indicated frame
-
-        :param frameName: The name of the frame
-        """
-        if frameName is None:
-            self.main_frame.setFocus()
-            return True
+    @pyqtSlot(object)    
+    def _remove_page(self, page):
+        # TODO ver que pasa con los popups
+        if self.individual_cookies:
+            nm = page.networkAccessManager()
+            
+            if nm in self.network_managers:
+                self.network_managers.remove(nm)
+                del nm
+            
+        if page in self._pages:
+            self._pages.remove(page)
+            del page
         
-        for frame in self.page.currentFrame().childFrames():
-            if frame.frameName() == frameName:
-                frame.setFocus()
-                return True
-        return False
     
-    def switch_to_frame_nro(self, nro=-1):
-        """Change the focus to the indicated frame
-
-        :param nro: Number of the frame
-        """
-        if nro == -1:
-            self.main_frame.setFocus()
-        
-        frames = self.page.currentFrame().childFrames()
-        if len(frames) <= (nro + 1):
-            frames[nro].setFocus()
-        
-        return nro is None or len(frames) < nro
-    
-    def capture(self, region=None, selector=None,
-            format=QImage.Format_ARGB32_Premultiplied):
-        """Returns snapshot as QImage.
-
-        :param region: An optional tupple containing region as pixel
-            coodinates.
-        :param selector: A selector targeted the element to crop on.
-        :param format: The output image format.
-        """
-        if region is None and selector is not None:
-            region = self.region_for_selector(selector)
-        if region:
-            x1, y1, x2, y2 = region
-            w, h = (x2 - x1), (y2 - y1)
-            image = QImage(QSize(x2, y2), format)
-            painter = QPainter(image)
-            self.main_frame.render(painter)
-            painter.end()
-            image = image.copy(x1, y1, w, h)
+    def create_page(self, wait_timeout=20, wait_callback=None, is_popup=False):
+        j = random.randint(0, 100000000)
+        if self.individual_cookies or len(self.network_managers) == 0:
+            network_manager = NetworkAccessManager(cache_dir=self.cache_dir + str(j), cache_size=self.cache_size,
+                                            prevent_download=self.prevent_download)
+            
+            cookie_jar = QNetworkCookieJar()
+            network_manager.setCookieJar(cookie_jar)
+            self.network_managers.append(network_manager)
         else:
-            image = QImage(self.page.viewportSize(), format)
-            painter = QPainter(image)
-            self.main_frame.render(painter)
-            painter.end()
-        return image
+            network_manager = self.network_managers[0]
+        
+        page = GhostWebPage(app=Ghost._app, network_manager=network_manager, wait_timeout=wait_timeout,
+                wait_callback=wait_callback, viewport_size=self.viewport_size,
+                user_agent=self.user_agent, log_level=self.log_level, create_page_callback=self.create_page,
+                is_popup=is_popup)
+        
+        page.removeWindowFromList.connect(self._remove_page)
+        
+        self._pages.append(page)
 
-    def capture_to(self, path, region=None, selector=None,
-        format=QImage.Format_ARGB32_Premultiplied):
-        """Saves snapshot as image.
+        if self.display:
+            self.webview = QtWebKit.QWebView()
+            self.webview.setPage(page)
+            self.webview.show()
 
-        :param path: The destination path.
-        :param region: An optional tupple containing region as pixel
-            coodinates.
-        :param selector: A selector targeted the element to crop on.
-        :param format: The output image format.
-            The available formats can be found here http://qt-project.org/doc/qt-4.8/qimage.html#Format-enum
-            There is also a "pdf" format that will render the page into a pdf file
-        """
-        if str(format).startswith("pdf"):
-            return self.pdf_engine.render_pdf(self.page, path)
-        else:
-            self.capture(region=region, format=format,
-                selector=selector).save(path)
-
-    @client_utils_required
-    @can_load_page
-    def click(self, selector):
-        """Click the targeted element.
-
-        :param selector: A CSS3 selector to targeted element.
-        """
-        if not self.exists(selector):
-            raise Exception("Can't find element to click")
-        return self.evaluate('GhostUtils.click("%s");' % selector)
-
-    class confirm:
-        """Statement that tells Ghost how to deal with javascript confirm().
-
-        :param confirm: A bollean that confirm.
-        :param callable: A callable that returns a boolean for confirmation.
-        """
-        def __init__(self, confirm=True, callback=None):
-            self.confirm = confirm
-            self.callback = callback
-
-        def __enter__(self):
-            Ghost._confirm_expected = (self.confirm, self.callback)
-
-        def __exit__(self, type, value, traceback):
-            Ghost._confirm_expected = None
-
-    @property
-    def content(self):
-        """Returns main_frame HTML as a string."""
-        return unicode(self.main_frame.toHtml())
+        return page, (len(self._pages) - 1)
     
-    def get_current_frame_content(self):
-        """Returns current frame HTML as a string."""
-        return unicode(self.page.currentFrame().toHtml())
-    
+    def process_events(self):
+        self._app.processEvents()
+        
     @property
     def cookies(self):
         """Returns all cookies."""
@@ -471,77 +847,18 @@ class Ghost(object):
         """Deletes all cookies."""
         self.cookie_jar.setAllCookies([])
 
-    @can_load_page
-    def evaluate(self, script):
-        """Evaluates script in page frame.
-
-        :param script: The script to evaluate.
-        """
-        return (self.page.currentFrame().evaluateJavaScript("%s" % script), 
-            self._release_last_resources())
-
-    def evaluate_js_file(self, path, encoding='utf-8'):
-        """Evaluates javascript file at given path in current frame.
-        Raises native IOException in case of invalid file.
-
-        :param path: The path of the file.
-        :param encoding: The file's encoding.
-        """
-        self.evaluate(codecs.open(path, encoding=encoding).read())
-
-    def exists(self, selector):
-        """Checks if element exists for given selector.
-
-        :param string: The element selector.
-        """
-        return not self.page.currentFrame().findFirstElement(selector).isNull()
-
     def exit(self):
         """Exits application and relateds."""
         if self.display:
             self.webview.close()
         Ghost._app.quit()
-        del self.manager
-        del self.page
-        del self.main_frame
+        for n in self.network_managers:
+            del n
+        for page in self._pages:
+            del page
+        
         if hasattr(self, 'xvfb'):
             self.xvfb.terminate()
-
-    @can_load_page
-    def fill(self, selector, values):
-        """Fills a form with provided values.
-
-        :param selector: A CSS selector to the target form to fill.
-        :param values: A dict containing the values.
-        """
-        if not self.exists(selector):
-            raise Exception("Can't find form")
-        resources = []
-        for field in values:
-            r, res = self.set_field_value("%s [name=%s]" % (selector, field),
-                values[field])
-            resources.extend(res)
-        return True, resources
-
-    @client_utils_required
-    @can_load_page
-    def fire_on(self, selector, method):
-        """Call method on element matching given selector.
-
-        :param selector: A CSS selector to the target element.
-        :param method: The name of the method to fire.
-        :param expect_loading: Specifies if a page loading is expected.
-        """
-        return self.evaluate('GhostUtils.fireOn("%s", "%s");' % (
-            selector, method))
-
-    def global_exists(self, global_name):
-        """Checks if javascript global exists.
-
-        :param global_name: The name of the global.
-        """
-        return self.evaluate('!(typeof %s === "undefined");' %
-            global_name)[0]
 
     def hide(self):
         """Close the webview."""
@@ -550,249 +867,14 @@ class Ghost(object):
         except:
             raise Exception("no webview to close")
 
-    def open(self, address, method='get', headers={}, auth=None,
-            wait_onload_event=True):
-        """Opens a web page.
-
-        :param address: The resource URL.
-        :param method: The Http method.
-        :param headers: An optional dict of extra request hearders.
-        :param auth: An optional tupple of HTTP auth (username, password).
-        :param wait_onload_event: If it's set to True waits until the OnLoad event from
-            the main page is fired. Otherwise wait until the Dom is ready.
-        :return: Page resource, All loaded resources.
-        """
-        if not wait_onload_event:
-            if self.ghostInit.receivers(SIGNAL("dom_is_ready(bool)")) == 0:
-                self.ghostInit.dom_is_ready.connect(self._page_loaded)
-            Logger.log("Waiting until OnReady event is fired")
-        else:
-            if self.ghostInit.receivers(SIGNAL("dom_is_ready(bool)")) > 0:
-                self.ghostInit.dom_is_ready.disconnect(self._page_loaded)
-            #Logger.log("Waiting until OnLoad event is fired")
-        
-        body = QByteArray()
-        try:
-            method = getattr(QNetworkAccessManager,
-                "%sOperation" % method.capitalize())
-        except AttributeError:
-            raise Exception("Invalid http method %s" % method)
-        request = QNetworkRequest(QUrl(address))
-        request.CacheLoadControl(QNetworkRequest.AlwaysNetwork)
-        for header in headers:
-            request.setRawHeader(header, headers[header])
-        
-        if auth is not None:
-            self.manager.setAuthCredentials(auth[0], auth[1])
-        self.main_frame.load(request, method, body)
-        
-        self.loaded = False
-        return self.wait_for_page_loaded()
-    
-    def download(self, path, address, **kwards):
-        page, resources = self.open(address, **kwards)
-        
-        with open(path, "wb") as f:
-            f.write(page.content)
-        
-        return page, resources
-        
-    class prompt:
-        """Statement that tells Ghost how to deal with javascript prompt().
-
-        :param value: A string value to fill in prompt.
-        :param callback: A callable that returns the value to fill in.
-        """
-        def __init__(self, value='', callback=None):
-            self.value = value
-            self.callback = callback
-
-        def __enter__(self):
-            Ghost._prompt_expected = (self.value, self.callback)
-
-        def __exit__(self, type, value, traceback):
-            Ghost._prompt_expected = None
-
-    @client_utils_required
-    def region_for_selector(self, selector):
-        """Returns frame region for given selector as tupple.
-
-        :param selector: The targeted element.
-        """
-        geo = self.main_frame.findFirstElement(selector).geometry()
-        try:
-            region = (geo.left(), geo.top(), geo.right(), geo.bottom())
-        except:
-            raise Exception("can't get region for selector '%s'" % selector)
-        return region
-
-    @can_load_page
-    @client_utils_required
-    def set_field_value(self, selector, value, blur=True):
-        """Sets the value of the field matched by given selector.
-
-        :param selector: A CSS selector that target the field.
-        :param value: The value to fill in.
-        :param blur: An optional boolean that force blur when filled in.
-        """
-        def _set_text_value(selector, value):
-            return self.evaluate(
-                'document.querySelector("%s").value=%s;' %
-                    (selector, json.dumps(value)))
-
-        res, resources = None, []
-
-        element = self.main_frame.findFirstElement(selector)
-        if element.isNull():
-            raise Exception('can\'t find element for %s"' % selector)
-        self.fire_on(selector, 'focus')
-        if element.tagName() in ["TEXTAREA", "SELECT"]:
-            res, resources = _set_text_value(selector, value)
-        elif element.tagName() == "INPUT":
-            if element.attribute('type') in ["color", "date", "datetime",
-                "datetime-local", "email", "hidden", "month", "number",
-                "password", "range", "search", "tel", "text", "time",
-                "url", "week"]:
-                res, resources = _set_text_value(selector, value)
-            elif element.attribute('type') == "checkbox":
-                res, resources = self.evaluate(
-                    'GhostUtils.setCheckboxValue("%s", %s);' %
-                        (selector, json.dumps(value)))
-            elif element.attribute('type') == "radio":
-                res, resources = self.evaluate(
-                    'GhostUtils.setRadioValue("%s", %s);' %
-                        (selector, json.dumps(value)))
-            elif element.attribute('type') == "file":
-                Ghost._upload_file = value
-                res, resources = self.click(selector)
-                Ghost._upload_file = None
-        else:
-            raise Exception('unsuported field tag')
-        if blur:
-            self.fire_on(selector, 'blur')
-        return res, resources
-
-    def set_viewport_size(self, width, height):
-        """Sets the page viewport size.
-
-        :param width: An integer that sets width pixel count.
-        :param height: An integer that sets height pixel count.
-        """
-        self.page.setViewportSize(QSize(width, height))
-
     def show(self):
         """Show current page inside a QWebView.
         """
         self.webview = QtWebKit.QWebView()
         self.webview.setPage(self.page)
         self.webview.show()
-
-    def wait_for(self, condition, timeout_message):
-        """Waits until condition is True.
-
-        :param condition: A callable that returns the condition.
-        :param timeout_message: The exception message on timeout.
-        """
-        started_at = time.time()
-        while not condition():
-            if time.time() > (started_at + self.wait_timeout):
-                raise Exception(timeout_message)
-            time.sleep(0.01)
-            Ghost._app.processEvents()
-            if self.wait_callback is not None:
-                self.wait_callback()
-
-    def wait_for_alert(self):
-        """Waits for main frame alert().
-        """
-        self.wait_for(lambda: Ghost._alert is not None,
-            'User has not been alerted.')
-        msg = Ghost._alert
-        Ghost._alert = None
-        return msg, self._release_last_resources()
-
-    def wait_for_page_loaded(self):
-        """Waits until page is loaded, assumed that a page as been requested.
-        """
-        self.wait_for(lambda: self.loaded and len(self._unsupported_files.keys()) == 0,
-            'Unable to load requested page')
-        
-        resources = self._release_last_resources()
-        page = None
-        url = self.main_frame.url().toString()
-        
-        for resource in resources:
-            if url == resource.url:
-                page = resource
-        return page, resources
-
-    def wait_for_selector(self, selector):
-        """Waits until selector match an element on the frame.
-
-        :param selector: The selector to wait for.
-        """
-        self.wait_for(lambda: self.exists(selector),
-            'Can\'t find element matching "%s"' % selector)
-        return True, self._release_last_resources()
-
-    def wait_for_text(self, text):
-        """Waits until given text appear on main frame.
-
-        :param text: The text to wait for.
-        """
-        self.wait_for(lambda: text in self.page.currentFrame().toPlainText(),
-            'Can\'t find "%s" in current frame' % text)
-        return True, self._release_last_resources()
     
     def delete_cache(self):
         self.cache.clear()
 
-    def _page_load_progress(self, progress):
-        pass
-        
-    def _page_loaded(self, ok):
-        """Called back when page is loaded.
-        """
-        # FIXME: Check why ok == False when we are trying to load
-        # unsupported content
-        self.loaded = True
-
-    def _page_load_started(self):
-        """Called back when page load started.
-        """
-        self.loaded = False
-
-    def _release_last_resources(self):
-        """Releases last loaded resources.
-
-        :return: The released resources.
-        """
-        last_resources = self.http_resources
-        self.http_resources = []
-        return last_resources
-
-    def _request_ended(self, reply):
-        """Adds an HttpResource object to http_resources.
-
-        :param reply: The QNetworkReply object.
-        """
-        if reply.url() == self.page.currentFrame().url():
-            pass
-            ##Logger.log("Injecting DOMReady code")
-            ##self._insert_dom_ready_code()
-        
-        content = None
-        if unicode(reply.url()) in self._unsupported_files:
-            del self._unsupported_files[unicode(reply.url())]
-            content = reply.readAll()
-        
-        if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
-            self.http_resources.append(HttpResource(reply, self.cache, content))
-        
-    def _unsupported_content(self, reply):
-        """Adds an HttpResource object to http_resources with unsupported
-        content.
-
-        :param reply: The QNetworkReply object.
-        """
-        self._unsupported_files[unicode(reply.url())] = reply
+    

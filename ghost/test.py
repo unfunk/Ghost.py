@@ -56,6 +56,7 @@ class BaseGhostTestCase(TestCase):
                 log_level=cls.log_level,
                 cache_dir="/tmp/ghost.py",
                 cache_size=10)
+            cls.page, name = cls.ghost.create_page()
             
             cls.ghost_prevent_download = Ghost(display=cls.display,
                 prevent_download=["jpg"],
@@ -64,6 +65,7 @@ class BaseGhostTestCase(TestCase):
                 log_level=cls.log_level,
                 cache_dir="/tmp/ghost.py",
                 cache_size=10)
+            cls.ghost_prevent_download_page, name = cls.ghost_prevent_download.create_page()
             
         return super(BaseGhostTestCase, cls).__new__(cls, *args, **kwargs)
 
@@ -82,8 +84,8 @@ class BaseGhostTestCase(TestCase):
         self.ghost.delete_cache()
         self.ghost_prevent_download.delete_cookies()
         self.ghost_prevent_download.delete_cache()
-        self.ghost.manager.removeProxy()
-        
+        self.ghost.network_manager.removeProxy()
+        self.page.release_last_resources()
         if self.display:
             self.ghost.hide()
 
