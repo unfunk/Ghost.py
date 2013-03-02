@@ -80,11 +80,11 @@ class BaseGhostTestCase(TestCase):
 
     def _post_teardown(self):
         """Deletes ghost cookies, cache and hide UI if needed."""
-        self.ghost.delete_cookies()
-        self.ghost.delete_cache()
-        self.ghost_prevent_download.delete_cookies()
-        self.ghost_prevent_download.delete_cache()
-        self.ghost.network_manager.removeProxy()
+        self.page.delete_cookies()
+        self.page.delete_cache()
+        self.ghost_prevent_download_page.delete_cookies()
+        self.ghost_prevent_download_page.delete_cache()
+        self.page.network_manager.removeProxy()
         self.page.release_last_resources()
         if self.display:
             self.ghost.hide()

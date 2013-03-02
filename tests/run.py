@@ -147,12 +147,12 @@ class GhostTest(GhostTestCase):
 
     def test_cookies(self):
         self.page.open("%scookie" % base_url)
-        self.assertEqual(len(self.ghost.cookies), 1)
+        self.assertEqual(len(self.page.cookies), 1)
     
     def test_delete_cookies(self):
         self.page.open("%scookie" % base_url)
-        self.ghost.delete_cookies()
-        self.assertEqual(len(self.ghost.cookies), 0)
+        self.page.delete_cookies()
+        self.assertEqual(len(self.page.cookies), 0)
 
     def test_wait_for_alert(self):
         self.page.open("%salert" % base_url)
@@ -351,13 +351,13 @@ class GhostTest(GhostTestCase):
         
     
     def test_proxy_configuration(self):
-        self.ghost.network_manager.configureProxy("127.0.0.1", 5001)
+        self.page.network_manager.configureProxy("127.0.0.1", 5001)
         page = self.page.open("%siframe" % base_url,
                 auth=("1", "2"))
         self.assertNotEqual(self.page.evaluate("document.title"), "Title1")
-        self.ghost.network_manager.removeProxy()
+        self.page.network_manager.removeProxy()
         
-        self.ghost.network_manager.configureProxy("127.0.0.1", 5001)
+        self.page.network_manager.configureProxy("127.0.0.1", 5001)
         page = self.page.open("%siframe" % base_url,
                 auth=("dummy", "dummy"))
         self.assertEqual(self.page.evaluate("document.title"), "Title1")

@@ -47,7 +47,6 @@ class Logger(logging.Logger):
             raise Exception('invalid log level')
         getattr(logger, level)("%s: %s", sender, message)
 
-
         
 def can_load_page(func):
     """Decorator that specifies if user can expect page loading from
@@ -85,6 +84,19 @@ class GhostWebPage(QWebPage):
     """Overrides QtWebKit.QWebPage in order to intercept some graphical
     behaviours like alert(), confirm().
     Also intercepts client side console.log().
+    
+    :param app: a QApplication that it's running Ghost.
+    :param network_manager: a NetworkManager instance in charge of managing all the network
+        requests.
+    :param wait_timeout: Maximum step duration in second.
+    :param wait_callback: An optional callable that is periodically
+        executed until Ghost stops waiting.
+    :param viewport_size: A tupple that sets initial viewport size.
+    :param user_agent: The default User-Agent header.
+    :param log_level: The optional logging level.
+    :param download_images: Indicate if the browser download or not the images
+    :param create_page_callback: A method called when a popup it's opened
+    :param is_popup: Boolean who indicate if the page it's a popup
     """
     user_agent = ""
     removeWindowFromList = pyqtSignal(object)
@@ -125,9 +137,9 @@ class GhostWebPage(QWebPage):
         self.loadStarted.connect(self._page_load_started)
         self.loadProgress.connect(self._page_load_progress)
         self.unsupportedContent.connect(self._unsupported_content)
-        self.manager = network_manager
-        self.setNetworkAccessManager(self.manager)
-        self.manager.finished.connect(self._request_ended)
+        self.network_manager = network_manager
+        self.setNetworkAccessManager(self.network_manager)
+        self.network_manager.finished.connect(self._request_ended)
         # User Agent
         self.setUserAgent(user_agent)
 
@@ -434,7 +446,7 @@ class GhostWebPage(QWebPage):
             request.setRawHeader(header, headers[header])
         
         if auth is not None:
-            self.manager.setAuthCredentials(auth[0], auth[1])
+            self.network_manager.setAuthCredentials(auth[0], auth[1])
         
         self.main_frame.load(request, method, body)
         
@@ -617,7 +629,7 @@ class GhostWebPage(QWebPage):
             content = reply.readAll()
         
         if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
-            cache = self.manager.cache()
+            cache = self.network_manager.cache()
             self.http_resources.append(HttpResource(reply, cache, content))
             
     def _unsupported_content(self, reply):
@@ -658,7 +670,19 @@ class GhostWebPage(QWebPage):
         
         return nro is None or len(frames) < nro
     
+    @property
+    def cookies(self):
+        """Returns all cookies."""
+        return self.network_manager.cookieJar().allCookies()
 
+    def delete_cookies(self):
+        """Deletes all cookies."""
+        self.network_manager.cookieJar().setAllCookies([])
+    
+    def delete_cache(self):
+        self.network_manager.cache().clear()
+        
+        
 class HttpResource(object):
     """Represents an HTTP resource.
     """
@@ -700,7 +724,7 @@ class GhostInit(QtCore.QObject):
         
         
 class Ghost(object):
-    """Ghost manages a QWebPage.
+    """Ghost manages multiple QWebPage's.
 
     :param user_agent: The default User-Agent header.
     :param wait_timeout: Maximum step duration in second.
@@ -715,6 +739,10 @@ class Ghost(object):
     :param download_images: Indicate if the browser download or not the images
     :param prevent_download: A List of extensions of the files that you want
         to prevent from downloading
+    :param individual_cookies: A boolean that indicates if every page created has
+        to share the same cookie jar. If it's True every page will have a different
+        cookie jar and a different cache directory. The cache directory will be called
+        cache_dir + randomint in order to separate the directories. 
     """
     _app = None
     
@@ -744,8 +772,6 @@ class Ghost(object):
         if not Ghost._app:
             Ghost._app = QApplication.instance() or QApplication(['ghost'])
         
-        #self.page = GhostWebPage(Ghost._app)
-        
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
         QtWebKit.QWebSettings.setObjectCacheCapacities(0, 0, 0)
         
@@ -758,9 +784,6 @@ class Ghost(object):
         self.network_managers = []
         #self.page.setNetworkAccessManager(self.manager)
         
-        # Cookie jar
-        self.cookie_jar = QNetworkCookieJar()
-        self.network_manager.setCookieJar(self.cookie_jar)
         self.current_page = None
 
         self._pages = []
@@ -771,7 +794,9 @@ class Ghost(object):
         self.exit()
     
     def get_page(self, index):
-        """
+        """Return the indicated GhostWebPage.
+        :param index: Number of the GhostWebPage
+        :return: Returns the page if the index exists, None otherwise 
         """
         page = None
         if index in range(len(self._pages)):
@@ -780,9 +805,9 @@ class Ghost(object):
         return page
         
     def switch_to_page(self, index):
-        """Change the focus to the indicated window
-
-        :param nro: Number of the window
+        """Return the indicated page and change the focus.
+        :param index: Number of the GhostWebPage
+        :return: Returns a GhostWebPage if the index exists, None otherwise
         """
         page = self.get_page(index)
         self.current_page = page
@@ -790,11 +815,14 @@ class Ghost(object):
         return page
     
     def remove_page(self, page):
+        """Destoy the indicated GhostWebPage
+        :param page: The GhostWebPage that we want to destroy
+        """
         self._remove_page(page)
         
     @pyqtSlot(object)    
     def _remove_page(self, page):
-        # TODO ver que pasa con los popups
+        # TODO see what happends when the page has a dependency (popups)
         if self.individual_cookies:
             nm = page.networkAccessManager()
             
@@ -808,6 +836,13 @@ class Ghost(object):
         
     
     def create_page(self, wait_timeout=20, wait_callback=None, is_popup=False):
+        """Create a new GhostWebPage
+        :param wait_timeout: The timeout used when we want to load a new url.
+        :param wait_callback: An optional callable that is periodically
+        executed until Ghost stops waiting.
+        :param is_popup: Indicated if the QWebPage it's a popup
+        """     
+
         j = random.randint(0, 100000000)
         if self.individual_cookies or len(self.network_managers) == 0:
             network_manager = NetworkAccessManager(cache_dir=self.cache_dir + str(j), cache_size=self.cache_size,
@@ -838,15 +873,6 @@ class Ghost(object):
     def process_events(self):
         self._app.processEvents()
         
-    @property
-    def cookies(self):
-        """Returns all cookies."""
-        return self.cookie_jar.allCookies()
-
-    def delete_cookies(self):
-        """Deletes all cookies."""
-        self.cookie_jar.setAllCookies([])
-
     def exit(self):
         """Exits application and relateds."""
         if self.display:
@@ -873,8 +899,3 @@ class Ghost(object):
         self.webview = QtWebKit.QWebView()
         self.webview.setPage(self.page)
         self.webview.show()
-    
-    def delete_cache(self):
-        self.cache.clear()
-
-    

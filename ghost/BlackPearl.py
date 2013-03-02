@@ -7,11 +7,11 @@ from flask import request, Response
 from threading import Thread
 
 logging.basicConfig()
-logger = logging.getLogger('ghost')
+logger = logging.getLogger('backpearl')
 
 class Logger(logging.Logger):
     @staticmethod
-    def log(message, sender="Ghost", level="info"):
+    def log(message, sender="BlackPearl", level="info"):
         if not hasattr(logger, level):
             raise Exception('invalid log level')
         getattr(logger, level)("%s: %s", sender, message)
@@ -45,30 +45,43 @@ class Event:
         
 class Pirate():
     def __init__(self, ghost):
+        """This is the class that it's executed by Black Pearl Server. It manages all the work made in Ghost.
+        :param ghost: A Ghost instance
+        """
         self.gh = ghost
         self.events = []
         self.page, name = self.gh.create_page()
         
     def add_event(self, method, callback=None, *args, **kwargs):
+        """Add a new event to the event queue.
+        :param method: the method that it's executed when the event it's tiggered.
+        :param callback: method that it's excuted after "method". It has to return
+            a tuple of (True|False, Object)
+        :param args: It takes a list of params to be passed to "method"        
+        """
         self.events.append(Event(method, callback, *args, **kwargs))
     
     def has_events(self):
+        """Indicate if the class has some event queued"""
         return len(self.events) > 0
     
     def get_event(self):
+        """Returns the next event in the queue"""
         if len(self.events) == 0:
             return None
         
         return self.events.pop(0)
     
     def event_ready(self, ev):
+        """This method is used the the execution of the event was ended, it's handles
+        the result of the event"""
         if ev.is_ready():
             self._last_result = ev.get_results()
         else:
             self.events.insert(0, ev)
     
     def start(self, data=None):
-        """Starts the ghost implementation
+        """Add in the queue all the event
         :param data: An initial information for Ghost
         """
         raise NotImplementedError()
@@ -99,17 +112,20 @@ class BlackPearl():
         """This is a Server that wake up Ghost instances.
         :param pirateClass: The class that we want to instanciate to do the work
         :param port: The port where the server will run
+        :param request_life: The time that takes to cancel an request (in case of failure or slow network).
         """
         self._pirateClass = pirateClass
+        self.gh = ghost
+        self.request_life = request_life
         self._port = port
         self._pirates = []
         self._start_request = []
         self._request_ready = {}
         self._sleep_bag = {}
-        self.gh = ghost
-        self.request_life = request_life
+        
         
     def start(self):
+        """Start the BlackPearl Server"""
         Logger.log("Starting BlackPearl Server", sender="BlackPearl")
         self._start_server(self._port)
         self.process_events()
@@ -131,12 +147,10 @@ class BlackPearl():
         
         self.server = Thread(target=self._server.run, kwargs=dict(threaded=True))
         self.server.start()
-        #self._server.run(threaded=True)
         
     def _start_process(self, data=None):
         Logger.log("Starting Pirate Instance", sender="BlackPearl")
         
-        # Encola todos los eventos
         name = str(random.randint(0, 999999999))
         self._request_ready[name] = None
         self._start_request.append((name, data))
@@ -153,11 +167,11 @@ class BlackPearl():
             name, data = self._start_request.pop(0)
             pirate = self._pirateClass(self.gh)
             pirate.start(data)
-            #self._pirates.append((name, pirate))
             self._pirates.append(PirateRequest(self.request_life, name, pirate))
             
             
     def process_events(self):
+        """Main process that manages all the events queued"""
         j = 0
         while True:
             try:
@@ -165,39 +179,37 @@ class BlackPearl():
                 
                 for pr in self._pirates:
                     name, pirate = pr.name, pr.pirate
-                    
-                    Logger.log("Executing Event", sender="BlackPearl")
                     ev = pirate.get_event()
-                    if ev is not None:
+                    
+                    if ev is  None or pr.is_old():
+                        is_ready = True
+                        Logger.log("Error. Old request, removing from list", sender="BlackPearl")
+                    else:
                         try:
-                            self.gh.process_events()
-                            if pr.is_old():
-                                is_ready = True
-                                Logger.log("Error. Old request", sender="BlackPearl")
-                            else:
-                                if ev in self._sleep_bag and self._sleep_bag[ev] > time.time():
-                                    # we wait for this
-                                    pirate.event_ready(ev)
-                                    break
-                                sleep_time = ev.execute()
+                            if ev in self._sleep_bag and self._sleep_bag[ev] > time.time():
+                                # we wait for this
                                 pirate.event_ready(ev)
-                                is_ready = not pirate.has_events()
+                                break
+                            sleep_time = ev.execute()
+                            pirate.event_ready(ev)
+                            is_ready = not pirate.has_events()
+                            
+                            if sleep_time > 0.0 and not is_ready:
+                                self._sleep_bag[ev] = time.time() + sleep_time
                                 
-                                if sleep_time > 0.0 and not is_ready:
-                                    self._sleep_bag[ev] = time.time() + sleep_time
-                                self.gh.process_events()    
+                            self.gh.process_events()    
                         except Exception as ex:
                             print ex
                             is_ready = True
                             Logger.log("Error. Removing element", sender="BlackPearl")
                         
-                        if is_ready:
-                            data = pirate.get_result()
-                            self._set_ready(pr, data)
+                    if is_ready:
+                        data = pirate.get_result()
+                        self._set_ready(pr, data)
+                        
+                        if ev in self._sleep_bag:
+                            del self._sleep_bag[ev]
                             
-                            if ev in self._sleep_bag:
-                                del self._sleep_bag[ev]
-                                
                 if len(self._start_request) == 0 and len(self._pirates) == 0:
                     time.sleep(0.1)
                     
