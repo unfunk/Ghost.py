@@ -121,7 +121,6 @@ class GhostWebPage(QWebPage):
         self.loaded = True
         self.create_page_callback = create_page_callback
         self.is_popup = is_popup
-        
         # Internal library object
         self.ghostInit =  GhostInit()
         
@@ -183,8 +182,6 @@ class GhostWebPage(QWebPage):
         def __exit__(self, type, value, traceback):
             GhostWebPage._prompt_expected = None     
             
-            
-            
     def chooseFile(self, frame, suggested_file=None):
         return self._upload_file
 
@@ -205,12 +202,12 @@ class GhostWebPage(QWebPage):
         """Checks if ghost is waiting for confirm, then returns the right
         value.
         """
-        if self._confirm_expected is None:
+        if GhostWebPage._confirm_expected is None:
             raise Exception('You must specified a value to confirm "%s"' %
                 message)
         
-        confirmation, callback = self._confirm_expected
-        self._confirm_expected = None
+        confirmation, callback = GhostWebPage._confirm_expected
+        GhostWebPage._confirm_expected = None
         Logger.log("confirm('%s')" % message, sender="Frame")
         if callback is not None:
             return callback()
@@ -220,17 +217,17 @@ class GhostWebPage(QWebPage):
         """Checks if ghost is waiting for prompt, then enters the right
         value.
         """
-        if self._prompt_expected is None:
+        if GhostWebPage._prompt_expected is None:
             raise Exception('You must specified a value for prompt "%s"' %
                 message)
-        result_value, callback = self._prompt_expected
+        result_value, callback = GhostWebPage._prompt_expected
         Logger.log("prompt('%s')" % message, sender="Frame")
         if callback is not None:
             result_value = callback()
         if result_value == '':
             Logger.log("'%s' prompt filled with empty string" % message,
                 level='warning')
-        self._prompt_expected = None
+        GhostWebPage._prompt_expected = None
         if result is None:
             # PySide
             return True, result_value

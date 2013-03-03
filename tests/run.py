@@ -181,13 +181,14 @@ class GhostTest(GhostTestCase):
         msg = self.page.wait_for_alert()
         self.assertEqual(msg, 'you denied!')
 
+    
     def test_prompt(self):
         self.page.open("%salert" % base_url)
         with self.page.prompt('my value'):
             self.page.click('#prompt-button')
         value = self.page.evaluate('promptValue')
         self.assertEqual(value, 'my value')
-
+    
     def test_prompt_callback(self):
         self.page.open("%salert" % base_url)
         with self.page.prompt(callback=lambda: 'another value'):
