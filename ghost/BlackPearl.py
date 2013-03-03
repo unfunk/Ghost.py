@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, random, hashlib, json, logging
-import subprocess, time
+import random, json, logging, time
 
 from flask import Flask
 from flask import request, Response
