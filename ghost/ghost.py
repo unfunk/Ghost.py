@@ -419,6 +419,8 @@ class GhostWebPage(QWebPage):
         :param auth: An optional tupple of HTTP auth (username, password).
         :param wait_onload_event: If it's set to True waits until the OnLoad event from
             the main page is fired. Otherwise wait until the Dom is ready.
+        :param wait_for_loading: If True waits until the page is Loaded. Note that wait_onload_event
+            isn't valid if wait_for_loading is False.
         :return: Page resource, All loaded resources.
         """
         if not wait_onload_event:
