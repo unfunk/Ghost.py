@@ -455,12 +455,12 @@ class GhostWebPage(QWebPage):
         return self.wait_for_page_loaded()
     
     def download(self, path, address, **kwards):
-        page, resources = self.open(address, **kwards)
+        page = self.open(address, **kwards)
         
         with open(path, "wb") as f:
             f.write(page.content)
         
-        return page, resources
+        return page
     
     
     @can_load_page
