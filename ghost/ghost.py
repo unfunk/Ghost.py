@@ -564,7 +564,6 @@ class GhostWebPage(QWebPage):
     
     def get_loaded_page(self):
         if self.loaded and len(self._unsupported_files.keys()) == 0:
-            print self.http_resource_page.url
             return self.http_resource_page            
             
         return None
