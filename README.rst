@@ -10,7 +10,7 @@ Example
 
     from ghost import Ghost
     ghost = Ghost()
-    page = ghost.open("http://jeanphi.fr")
+    page, page_name = ghost.open("http://jeanphi.fr")
     assert page.http_status==200 and 'jeanphix' in ghost.content
 
 
