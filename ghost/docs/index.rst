@@ -52,19 +52,22 @@ Let's search some planes on ebay::
 
     url = "http://www.ebay.com/"
     gh = Ghost()
-
+    
+    # We create a new page
+    page, page_name = gh.create_page()
+    
     # We load the main page of ebay
-    page, resources = gh.open(url, wait_onload_event=True)
+    page_resource = page.open(url, wait_onload_event=True)
 
     # Full the main bar and click on the search button
-    gh.set_field_value("#gh-ac", "plane")
-    gh.click("#gh-btn")
+    page.set_field_value("#gh-ac", "plane")
+    page.click("#gh-btn")
 
     # Wait for the next page
-    gh.wait_for_selector("#e1-15")
+    page.wait_for_selector("#e1-15")
 
     # Save the image of the screen
-    gh.capture_to("plane.png")
+    page.capture_to("plane.png")
 
 
 Some times we need to scrap a website but we don't need to download
@@ -79,12 +82,15 @@ experience faster than ever. Let's see another example::
     gh = Ghost(cache_size=10, download_images=False,
                prevent_download=["css", "js"])
     
+    # We create a new page
+    page, page_name = gh.create_page()
+    
     # wait_onload_event will tell to Ghost to leave the open method
     # when the On Ready event on the web page has been fired
-    page, resources = gh.open(url, wait_onload_event=False)
+    page_resource = page.open(url, wait_onload_event=False)
     
     # We retrive the links from the web page
-    links = gh.evaluate("""
+    links = page.evaluate("""
                             var links = document.querySelectorAll("a");
                             var listRet = [];
                             for (var i=0; i<links.length; i++){
@@ -109,15 +115,34 @@ Contents:
 .. autoclass:: Ghost
     :members: 
 
-NetworkAccessManager Content:
+GhostWebPage Class:
+-----------------------------
+.. autoclass:: GhostWebPage
+    :members:
+    
+NetworkAccessManager Class:
 -----------------------------
 .. autoclass:: NetworkAccessManager
     :members: 
 
-PaperSize Content:
+PaperSize Class:
 ------------------
 .. autoclass:: PaperSize
     :members:
+
+BlackPearl Class
+================
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+    
+.. autoclass:: BlackPearl
+    :members:
+
+.. autoclass:: Pirate
+    :members:
+    
     
 Indices and tables
 ==================

@@ -54,10 +54,9 @@ class Pirate():
     def add_event(self, method, callback=None, *args, **kwargs):
         """Add a new event to the event queue.
         :param method: the method that it's executed when the event it's tiggered.
-        :param callback: method that it's excuted after "method". It has to return
-            a tuple of (True|False, Object)
-        :param args: It takes a list of params to be passed to "method"        
-        """
+        :param callback: method that it's excuted after "method".
+        It has to return a tuple of (True|False, Object)
+        :param args: It takes a list of params to be passed to 'method'"""
         self.events.append(Event(method, callback, *args, **kwargs))
     
     def has_events(self):

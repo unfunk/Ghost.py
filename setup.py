@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Ghost.py',
-    version='0.3b',
+    version='0.4b',
     url='https://github.com/carrerasrodrigo/Ghost.py',
     license='mit',
     author='Jean-Philippe Serafin | Rodrigo N. Carreras',

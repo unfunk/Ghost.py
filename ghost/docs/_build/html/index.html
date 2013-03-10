@@ -82,18 +82,21 @@ python setup.py install</pre>
 <span class="n">url</span> <span class="o">=</span> <span class="s">&quot;http://www.ebay.com/&quot;</span>
 <span class="n">gh</span> <span class="o">=</span> <span class="n">Ghost</span><span class="p">()</span>
 
+<span class="c"># We create a new page</span>
+<span class="n">page</span><span class="p">,</span> <span class="n">page_name</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">create_page</span><span class="p">()</span>
+
 <span class="c"># We load the main page of ebay</span>
-<span class="n">page</span><span class="p">,</span> <span class="n">resources</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">wait_onload_event</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">page_resource</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">wait_onload_event</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="c"># Full the main bar and click on the search button</span>
-<span class="n">gh</span><span class="o">.</span><span class="n">set_field_value</span><span class="p">(</span><span class="s">&quot;#gh-ac&quot;</span><span class="p">,</span> <span class="s">&quot;plane&quot;</span><span class="p">)</span>
-<span class="n">gh</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s">&quot;#gh-btn&quot;</span><span class="p">)</span>
+<span class="n">page</span><span class="o">.</span><span class="n">set_field_value</span><span class="p">(</span><span class="s">&quot;#gh-ac&quot;</span><span class="p">,</span> <span class="s">&quot;plane&quot;</span><span class="p">)</span>
+<span class="n">page</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s">&quot;#gh-btn&quot;</span><span class="p">)</span>
 
 <span class="c"># Wait for the next page</span>
-<span class="n">gh</span><span class="o">.</span><span class="n">wait_for_selector</span><span class="p">(</span><span class="s">&quot;#e1-15&quot;</span><span class="p">)</span>
+<span class="n">page</span><span class="o">.</span><span class="n">wait_for_selector</span><span class="p">(</span><span class="s">&quot;#e1-15&quot;</span><span class="p">)</span>
 
 <span class="c"># Save the image of the screen</span>
-<span class="n">gh</span><span class="o">.</span><span class="n">capture_to</span><span class="p">(</span><span class="s">&quot;plane.png&quot;</span><span class="p">)</span>
+<span class="n">page</span><span class="o">.</span><span class="n">capture_to</span><span class="p">(</span><span class="s">&quot;plane.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Some times we need to scrap a website but we don&#8217;t need to download
@@ -107,12 +110,15 @@ experience faster than ever. Let&#8217;s see another example:</p>
 <span class="n">gh</span> <span class="o">=</span> <span class="n">Ghost</span><span class="p">(</span><span class="n">cache_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">download_images</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
            <span class="n">prevent_download</span><span class="o">=</span><span class="p">[</span><span class="s">&quot;css&quot;</span><span class="p">,</span> <span class="s">&quot;js&quot;</span><span class="p">])</span>
 
+<span class="c"># We create a new page</span>
+<span class="n">page</span><span class="p">,</span> <span class="n">page_name</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">create_page</span><span class="p">()</span>
+
 <span class="c"># wait_onload_event will tell to Ghost to leave the open method</span>
 <span class="c"># when the On Ready event on the web page has been fired</span>
-<span class="n">page</span><span class="p">,</span> <span class="n">resources</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">wait_onload_event</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">page_resource</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">wait_onload_event</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
 <span class="c"># We retrive the links from the web page</span>
-<span class="n">links</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="n">links</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
 <span class="s">                        var links = document.querySelectorAll(&quot;a&quot;);</span>
 <span class="s">                        var listRet = [];</span>
 <span class="s">                        for (var i=0; i&lt;links.length; i++){</span>
@@ -135,8 +141,8 @@ experience faster than ever. Let&#8217;s see another example:</p>
 </div>
 <span class="target" id="module-ghost"></span><dl class="class">
 <dt id="ghost.Ghost">
-<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">Ghost</tt><big>(</big><em>user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML</em>, <em>like Gecko) Chrome/15.0.874.121 Safari/535.2'</em>, <em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>log_level=30</em>, <em>display=False</em>, <em>viewport_size=(800</em>, <em>600)</em>, <em>cache_dir='/tmp/ghost.py'</em>, <em>cache_size=0</em>, <em>download_images=True</em>, <em>prevent_download=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#ghost.Ghost" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ghost manages a QWebPage.</p>
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">Ghost</tt><big>(</big><em>user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML</em>, <em>like Gecko) Chrome/15.0.874.121 Safari/535.2'</em>, <em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>log_level=30</em>, <em>display=False</em>, <em>viewport_size=(800</em>, <em>600)</em>, <em>cache_dir='/tmp/ghost.py'</em>, <em>cache_size=0</em>, <em>download_images=True</em>, <em>prevent_download=</em><span class="optional">[</span><span class="optional">]</span>, <em>share_cookies=True</em>, <em>share_cache=True</em><big>)</big><a class="headerlink" href="#ghost.Ghost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ghost manages multiple QWebPage&#8217;s.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -155,14 +161,111 @@ cache it&#8217;s automatically disabled.</li>
 <li><strong>download_images</strong> &#8211; Indicate if the browser download or not the images</li>
 <li><strong>prevent_download</strong> &#8211; A List of extensions of the files that you want
 to prevent from downloading</li>
+<li><strong>share_cookies</strong> &#8211; A boolean that indicates if every page created has
+to share the same cookie jar. If False every page will have a different
+cookie jar</li>
+<li><strong>share_cache</strong> &#8211; A boolean that indicates if every page created has
+to share the same cache directory. If False, cache directory will be called
+cache_dir + randomint in order to separate the directories.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
-<dt id="ghost.Ghost.capture">
-<tt class="descname">capture</tt><big>(</big><em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.Ghost.capture" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.Ghost.create_page">
+<tt class="descname">create_page</tt><big>(</big><em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>is_popup=False</em>, <em>max_resource_queued=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.create_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new GhostWebPage
+:param wait_timeout: The timeout used when we want to load a new url.
+:param wait_callback: An optional callable that is periodically
+executed until Ghost stops waiting.
+:param is_popup: Indicates if the QWebPage it&#8217;s a popup
+:param max_resource_queued: Indicates witch it&#8217;s the max number of
+resources that can be saved in memory. If None then no limits
+are applied. If 0 then no resources are kept. If the number
+it&#8217;s &gt; 0 then the number of resources won&#8217;t be more than
+max_resource_queued</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.exit">
+<tt class="descname">exit</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exits application and relateds.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.get_page">
+<tt class="descname">get_page</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#ghost.Ghost.get_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the indicated GhostWebPage.
+:param index: Number of the GhostWebPage
+:return: Returns the page if the index exists, None otherwise</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.hide">
+<tt class="descname">hide</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.hide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the webview.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.remove_page">
+<tt class="descname">remove_page</tt><big>(</big><em>page</em><big>)</big><a class="headerlink" href="#ghost.Ghost.remove_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>Destoy the indicated GhostWebPage
+:param page: The GhostWebPage that we want to destroy</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.show">
+<tt class="descname">show</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show current page inside a QWebView.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Ghost.switch_to_page">
+<tt class="descname">switch_to_page</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the indicated page and change the focus.
+:param index: Number of the GhostWebPage
+:return: Returns a GhostWebPage if the index exists, None otherwise</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="ghostwebpage-class">
+<h2>GhostWebPage Class:<a class="headerlink" href="#ghostwebpage-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ghost.GhostWebPage">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">GhostWebPage</tt><big>(</big><em>app</em>, <em>network_manager</em>, <em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>viewport_size=(800</em>, <em>600)</em>, <em>user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML</em>, <em>like Gecko) Chrome/15.0.874.121 Safari/535.2'</em>, <em>log_level=30</em>, <em>download_images=True</em>, <em>create_page_callback=None</em>, <em>is_popup=False</em>, <em>max_resource_queued=None</em>, <em>*args</em>, <em>**kargs</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overrides QtWebKit.QWebPage in order to intercept some graphical
+behaviours like alert(), confirm().
+Also intercepts client side console.log().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>app</strong> &#8211; a QApplication that it&#8217;s running Ghost.</li>
+<li><strong>network_manager</strong> &#8211; a NetworkManager instance in charge of managing all the network
+requests.</li>
+<li><strong>wait_timeout</strong> &#8211; Maximum step duration in second.</li>
+<li><strong>wait_callback</strong> &#8211; An optional callable that is periodically
+executed until Ghost stops waiting.</li>
+<li><strong>viewport_size</strong> &#8211; A tupple that sets initial viewport size.</li>
+<li><strong>user_agent</strong> &#8211; The default User-Agent header.</li>
+<li><strong>log_level</strong> &#8211; The optional logging level.</li>
+<li><strong>download_images</strong> &#8211; Indicate if the browser download or not the images</li>
+<li><strong>create_page_callback</strong> &#8211; A method called when a popup it&#8217;s opened</li>
+<li><strong>is_popup</strong> &#8211; Boolean who indicate if the page it&#8217;s a popup</li>
+<li><strong>max_resource_queued</strong> &#8211; Indicates witch it&#8217;s the max number of resources that can be
+saved in memory. If None then no limits are applied. If 0 then no resources are kept/
+If the number it&#8217;s &gt; 0 then the number of resources won&#8217;t be more than max_resource_queued</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="ghost.GhostWebPage.capture">
+<tt class="descname">capture</tt><big>(</big><em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.capture" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns snapshot as QImage.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -181,8 +284,8 @@ coodinates.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.capture_to">
-<tt class="descname">capture_to</tt><big>(</big><em>path</em>, <em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.Ghost.capture_to" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.capture_to">
+<tt class="descname">capture_to</tt><big>(</big><em>path</em>, <em>region=None</em>, <em>selector=None</em>, <em>format=6</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.capture_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves snapshot as image.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -204,8 +307,8 @@ There is also a &#8220;pdf&#8221; format that will render the page into a pdf fi
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.click">
-<tt class="descname">click</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.click" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.click">
+<tt class="descname">click</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.click" title="Permalink to this definition">¶</a></dt>
 <dd><p>Click the targeted element.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -218,8 +321,8 @@ There is also a &#8220;pdf&#8221; format that will render the page into a pdf fi
 </dd></dl>
 
 <dl class="class">
-<dt id="ghost.Ghost.confirm">
-<em class="property">class </em><tt class="descname">confirm</tt><big>(</big><em>confirm=True</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.confirm" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.confirm">
+<em class="property">class </em><tt class="descname">confirm</tt><big>(</big><em>confirm=True</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.confirm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Statement that tells Ghost how to deal with javascript confirm().</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -236,26 +339,26 @@ There is also a &#8220;pdf&#8221; format that will render the page into a pdf fi
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ghost.Ghost.content">
-<tt class="descclassname">Ghost.</tt><tt class="descname">content</tt><a class="headerlink" href="#ghost.Ghost.content" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns current frame HTML as a string.</p>
+<dt id="ghost.GhostWebPage.content">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">content</tt><a class="headerlink" href="#ghost.GhostWebPage.content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns main_frame HTML as a string.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ghost.Ghost.cookies">
-<tt class="descclassname">Ghost.</tt><tt class="descname">cookies</tt><a class="headerlink" href="#ghost.Ghost.cookies" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.cookies">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">cookies</tt><a class="headerlink" href="#ghost.GhostWebPage.cookies" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all cookies.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.delete_cookies">
-<tt class="descclassname">Ghost.</tt><tt class="descname">delete_cookies</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.delete_cookies" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.delete_cookies">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">delete_cookies</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.delete_cookies" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes all cookies.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.evaluate">
-<tt class="descclassname">Ghost.</tt><tt class="descname">evaluate</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.evaluate" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.evaluate">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">evaluate</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates script in page frame.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -268,8 +371,8 @@ There is also a &#8220;pdf&#8221; format that will render the page into a pdf fi
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.evaluate_js_file">
-<tt class="descclassname">Ghost.</tt><tt class="descname">evaluate_js_file</tt><big>(</big><em>path</em>, <em>encoding='utf-8'</em><big>)</big><a class="headerlink" href="#ghost.Ghost.evaluate_js_file" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.evaluate_js_file">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">evaluate_js_file</tt><big>(</big><em>path</em>, <em>encoding='utf-8'</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.evaluate_js_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates javascript file at given path in current frame.
 Raises native IOException in case of invalid file.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -287,8 +390,8 @@ Raises native IOException in case of invalid file.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.exists">
-<tt class="descclassname">Ghost.</tt><tt class="descname">exists</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.Ghost.exists" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.exists">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">exists</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.exists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if element exists for given selector.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -301,14 +404,8 @@ Raises native IOException in case of invalid file.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.exit">
-<tt class="descclassname">Ghost.</tt><tt class="descname">exit</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.exit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exits application and relateds.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ghost.Ghost.fill">
-<tt class="descclassname">Ghost.</tt><tt class="descname">fill</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.fill" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.fill">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">fill</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.fill" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fills a form with provided values.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -325,8 +422,8 @@ Raises native IOException in case of invalid file.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.fire_on">
-<tt class="descclassname">Ghost.</tt><tt class="descname">fire_on</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.fire_on" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.fire_on">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">fire_on</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.fire_on" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call method on element matching given selector.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -344,8 +441,14 @@ Raises native IOException in case of invalid file.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.global_exists">
-<tt class="descclassname">Ghost.</tt><tt class="descname">global_exists</tt><big>(</big><em>global_name</em><big>)</big><a class="headerlink" href="#ghost.Ghost.global_exists" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.get_current_frame_content">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">get_current_frame_content</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.get_current_frame_content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns current frame HTML as a string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.GhostWebPage.global_exists">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">global_exists</tt><big>(</big><em>global_name</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.global_exists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if javascript global exists.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -358,14 +461,34 @@ Raises native IOException in case of invalid file.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.hide">
-<tt class="descclassname">Ghost.</tt><tt class="descname">hide</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.hide" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close the webview.</p>
+<dt id="ghost.GhostWebPage.javaScriptAlert">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">javaScriptAlert</tt><big>(</big><em>frame</em>, <em>message</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.javaScriptAlert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notifies ghost for alert, then pass.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.open">
-<tt class="descclassname">Ghost.</tt><tt class="descname">open</tt><big>(</big><em>address</em>, <em>method='get'</em>, <em>headers={}</em>, <em>auth=None</em>, <em>wait_onload_event=True</em><big>)</big><a class="headerlink" href="#ghost.Ghost.open" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.javaScriptConfirm">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">javaScriptConfirm</tt><big>(</big><em>frame</em>, <em>message</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.javaScriptConfirm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if ghost is waiting for confirm, then returns the right
+value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.GhostWebPage.javaScriptConsoleMessage">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">javaScriptConsoleMessage</tt><big>(</big><em>message</em>, <em>line</em>, <em>source</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.javaScriptConsoleMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints client console message in current output stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.GhostWebPage.javaScriptPrompt">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">javaScriptPrompt</tt><big>(</big><em>frame</em>, <em>message</em>, <em>defaultValue</em>, <em>result=None</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.javaScriptPrompt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if ghost is waiting for prompt, then enters the right
+value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.GhostWebPage.open">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">open</tt><big>(</big><em>address</em>, <em>method='get'</em>, <em>headers={}</em>, <em>auth=None</em>, <em>wait_onload_event=True</em>, <em>wait_for_loading=True</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opens a web page.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -378,6 +501,8 @@ Raises native IOException in case of invalid file.</p>
 <li><strong>auth</strong> &#8211; An optional tupple of HTTP auth (username, password).</li>
 <li><strong>wait_onload_event</strong> &#8211; If it&#8217;s set to True waits until the OnLoad event from
 the main page is fired. Otherwise wait until the Dom is ready.</li>
+<li><strong>wait_for_loading</strong> &#8211; If True waits until the page is Loaded. Note that wait_onload_event
+isn&#8217;t valid if wait_for_loading is False.</li>
 </ul>
 </td>
 </tr>
@@ -389,8 +514,8 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="class">
-<dt id="ghost.Ghost.prompt">
-<em class="property">class </em><tt class="descclassname">Ghost.</tt><tt class="descname">prompt</tt><big>(</big><em>value=''</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.prompt" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.prompt">
+<em class="property">class </em><tt class="descclassname">GhostWebPage.</tt><tt class="descname">prompt</tt><big>(</big><em>value=''</em>, <em>callback=None</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.prompt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Statement that tells Ghost how to deal with javascript prompt().</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -407,8 +532,8 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.region_for_selector">
-<tt class="descclassname">Ghost.</tt><tt class="descname">region_for_selector</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.region_for_selector" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.region_for_selector">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">region_for_selector</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.region_for_selector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns frame region for given selector as tupple.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -421,8 +546,8 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.set_field_value">
-<tt class="descclassname">Ghost.</tt><tt class="descname">set_field_value</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Ghost.set_field_value" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.set_field_value">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">set_field_value</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.set_field_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the value of the field matched by given selector.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -440,8 +565,8 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.set_viewport_size">
-<tt class="descclassname">Ghost.</tt><tt class="descname">set_viewport_size</tt><big>(</big><em>width</em>, <em>height</em><big>)</big><a class="headerlink" href="#ghost.Ghost.set_viewport_size" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.set_viewport_size">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">set_viewport_size</tt><big>(</big><em>width</em>, <em>height</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.set_viewport_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the page viewport size.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -458,14 +583,8 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.show">
-<tt class="descclassname">Ghost.</tt><tt class="descname">show</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.show" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show current page inside a QWebView.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ghost.Ghost.switch_to_frame">
-<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_frame</tt><big>(</big><em>frameName=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_frame" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.switch_to_frame">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">switch_to_frame</tt><big>(</big><em>frameName=None</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.switch_to_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change the focus to the indicated frame</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -478,8 +597,8 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.switch_to_frame_nro">
-<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_frame_nro</tt><big>(</big><em>nro=-1</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_frame_nro" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.switch_to_frame_nro">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">switch_to_frame_nro</tt><big>(</big><em>nro=-1</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.switch_to_frame_nro" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change the focus to the indicated frame</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -492,28 +611,16 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.switch_to_main_window">
-<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_main_window</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_main_window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the focus to the main windows</p>
+<dt id="ghost.GhostWebPage.switch_to_sub_window">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">switch_to_sub_window</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.switch_to_sub_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the focus to the sub window (popup)
+:param index: The index of the window, in the order that the
+window was opened</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.switch_to_sub_window">
-<tt class="descclassname">Ghost.</tt><tt class="descname">switch_to_sub_window</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#ghost.Ghost.switch_to_sub_window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the focus to the indicated window</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nro</strong> &#8211; Number of the window</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="ghost.Ghost.wait_for">
-<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for</tt><big>(</big><em>condition</em>, <em>timeout_message</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.wait_for">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">wait_for</tt><big>(</big><em>condition</em>, <em>timeout_message</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.wait_for" title="Permalink to this definition">¶</a></dt>
 <dd><p>Waits until condition is True.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -530,20 +637,20 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.wait_for_alert">
-<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_alert</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_alert" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.wait_for_alert">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">wait_for_alert</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.wait_for_alert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Waits for main frame alert().</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.wait_for_page_loaded">
-<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_page_loaded</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_page_loaded" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.wait_for_page_loaded">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">wait_for_page_loaded</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.wait_for_page_loaded" title="Permalink to this definition">¶</a></dt>
 <dd><p>Waits until page is loaded, assumed that a page as been requested.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.wait_for_selector">
-<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_selector</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_selector" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.wait_for_selector">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">wait_for_selector</tt><big>(</big><em>selector</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.wait_for_selector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Waits until selector match an element on the frame.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -556,8 +663,8 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="ghost.Ghost.wait_for_text">
-<tt class="descclassname">Ghost.</tt><tt class="descname">wait_for_text</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#ghost.Ghost.wait_for_text" title="Permalink to this definition">¶</a></dt>
+<dt id="ghost.GhostWebPage.wait_for_text">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">wait_for_text</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.wait_for_text" title="Permalink to this definition">¶</a></dt>
 <dd><p>Waits until given text appear on main frame.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -571,8 +678,9 @@ the main page is fired. Otherwise wait until the Dom is ready.</li>
 
 </dd></dl>
 
-<div class="section" id="networkaccessmanager-content">
-<h2>NetworkAccessManager Content:<a class="headerlink" href="#networkaccessmanager-content" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="networkaccessmanager-class">
+<h2>NetworkAccessManager Class:<a class="headerlink" href="#networkaccessmanager-class" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ghost.NetworkAccessManager">
 <em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">NetworkAccessManager</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.NetworkAccessManager" title="Permalink to this definition">¶</a></dt>
@@ -644,8 +752,8 @@ access with a password</li>
 </dd></dl>
 
 </div>
-<div class="section" id="papersize-content">
-<h2>PaperSize Content:<a class="headerlink" href="#papersize-content" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="papersize-class">
+<h2>PaperSize Class:<a class="headerlink" href="#papersize-class" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ghost.PaperSize">
 <em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">PaperSize</tt><big>(</big><em>width</em>, <em>height</em>, <em>margin</em>, <em>orientation=None</em>, <em>page_type=None</em><big>)</big><a class="headerlink" href="#ghost.PaperSize" title="Permalink to this definition">¶</a></dt>
@@ -674,6 +782,79 @@ Legal|Letter|Tabloid|</li>
 
 </div>
 </div>
+<div class="section" id="blackpearl-class">
+<h1>BlackPearl Class<a class="headerlink" href="#blackpearl-class" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<dl class="class">
+<dt id="ghost.BlackPearl">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">BlackPearl</tt><big>(</big><em>ghost</em>, <em>pirateClass</em>, <em>port=8000</em>, <em>request_life=300</em><big>)</big><a class="headerlink" href="#ghost.BlackPearl" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="ghost.BlackPearl.process_events">
+<tt class="descname">process_events</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.BlackPearl.process_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main process that manages all the events queued</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.BlackPearl.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.BlackPearl.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the BlackPearl Server</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ghost.Pirate">
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">Pirate</tt><big>(</big><em>ghost</em><big>)</big><a class="headerlink" href="#ghost.Pirate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="ghost.Pirate.add_event">
+<tt class="descname">add_event</tt><big>(</big><em>method</em>, <em>callback=None</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ghost.Pirate.add_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new event to the event queue.
+:param method: the method that it&#8217;s executed when the event it&#8217;s tiggered.
+:param callback: method that it&#8217;s excuted after &#8220;method&#8221;.
+It has to return a tuple of (True|False, Object)
+:param args: It takes a list of params to be passed to &#8216;method&#8217;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Pirate.event_ready">
+<tt class="descname">event_ready</tt><big>(</big><em>ev</em><big>)</big><a class="headerlink" href="#ghost.Pirate.event_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is used the the execution of the event was ended, it&#8217;s handles
+the result of the event</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Pirate.get_event">
+<tt class="descname">get_event</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Pirate.get_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next event in the queue</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Pirate.get_result">
+<tt class="descname">get_result</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Pirate.get_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the result of the Ghost scrapping
+:return: An String with the information obtained</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Pirate.has_events">
+<tt class="descname">has_events</tt><big>(</big><big>)</big><a class="headerlink" href="#ghost.Pirate.has_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate if the class has some event queued</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.Pirate.start">
+<tt class="descname">start</tt><big>(</big><em>data=None</em><big>)</big><a class="headerlink" href="#ghost.Pirate.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add in the queue all the event
+:param data: An initial information for Ghost</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
@@ -695,8 +876,12 @@ Legal|Letter|Tabloid|</li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#ghost-class">Ghost Class</a><ul>
-<li><a class="reference internal" href="#networkaccessmanager-content">NetworkAccessManager Content:</a></li>
-<li><a class="reference internal" href="#papersize-content">PaperSize Content:</a></li>
+<li><a class="reference internal" href="#ghostwebpage-class">GhostWebPage Class:</a></li>
+<li><a class="reference internal" href="#networkaccessmanager-class">NetworkAccessManager Class:</a></li>
+<li><a class="reference internal" href="#papersize-class">PaperSize Class:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#blackpearl-class">BlackPearl Class</a><ul>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>

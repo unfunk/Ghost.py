@@ -866,9 +866,11 @@ class Ghost(object):
         :param wait_callback: An optional callable that is periodically
         executed until Ghost stops waiting.
         :param is_popup: Indicates if the QWebPage it's a popup
-        :param max_resource_queued: Indicates witch it's the max number of resources that can be
-            saved in memory. If None then no limits are applied. If 0 then no resources are kept/
-            If the number it's > 0 then the number of resources won't be more than max_resource_queued
+        :param max_resource_queued: Indicates witch it's the max number of
+        resources that can be saved in memory. If None then no limits
+        are applied. If 0 then no resources are kept. If the number
+        it's > 0 then the number of resources won't be more than
+        max_resource_queued
         """     
         cache_name = self.cache_dir if self.share_cache else self.cache_dir + str(random.randint(0, 100000000))
         network_manager = NetworkAccessManager(cache_dir=cache_name, cache_size=self.cache_size,

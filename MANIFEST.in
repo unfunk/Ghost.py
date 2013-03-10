@@ -1,6 +1,9 @@
 include README.rst *.py
 include ghost/ghost.py
+include ghost/BlackPearl.py
+include ghost/NetworkAccessManager.py
 include ghost/test.py
+include ghost/pdf.py
 include ghost/ext/django/test.py
 include ghost/utils.js
 recursive-include docs *
