@@ -141,7 +141,7 @@ class GhostTest(GhostTestCase):
         self.assertEqual(page.headers['Content-Type'], 'text/html; charset=utf-8')
 
     def test_click_link(self):
-        page= self.page.open("%s" % base_url)
+        page = self.page.open("%s" % base_url)
         page = self.page.click('a', expect_loading=True)
         self.assertEqual(page.url, "%sform" % base_url)
 
@@ -280,7 +280,7 @@ class GhostTest(GhostTestCase):
             foo = f.read()
         self.assertEqual(resources[0].content, foo)
         self.assertEqual(len(resources), 1)
-        self.assertEqual(page, None)
+        
         
         page = self.page.open("%ssend_pdf" % base_url)
         resources = self.page.release_last_resources()
@@ -289,7 +289,6 @@ class GhostTest(GhostTestCase):
             foo = f.read()
         self.assertEqual(resources[0].content, foo)
         self.assertEqual(len(resources), 1)
-        self.assertEqual(page, None)
     
     def test_change_frame(self):
         page = self.page.open("%siframe" % base_url)
@@ -368,6 +367,29 @@ class GhostTest(GhostTestCase):
         page = self.page.open("%siframe" % base_url)
         self.page.capture_to(p, format="pdf")
         self.assertTrue(os.path.exists(p))
+    
+    
+    def test_max_resources(self):
+        gpage, name = self.ghost.create_page(max_resource_queued=0)
+        page = gpage.open("%simage" % base_url)
+        self.ghost.remove_page(gpage)
+        self.assertEqual(len(gpage.release_last_resources()), 0)
+        self.assertEqual(page.url, "%simage" % base_url)
+        
+        gpage, name = self.ghost.create_page(max_resource_queued=0)
+        page = gpage.open("%simage" % base_url)
+        self.ghost.remove_page(gpage)
+        self.assertEqual(len(gpage.release_last_resources()), 0)
+        
+        gpage, name = self.ghost.create_page(max_resource_queued=1)
+        page = gpage.open("%simage" % base_url)
+        self.ghost.remove_page(gpage)
+        self.assertEqual(len(gpage.release_last_resources()), 1)
+        
+        gpage, name = self.ghost.create_page(max_resource_queued=10)
+        page = gpage.open("%simage" % base_url)
+        self.ghost.remove_page(gpage)
+        self.assertEqual(len(gpage.release_last_resources()), 2)
     
 if __name__ == '__main__':
     unittest.main()

@@ -60,7 +60,7 @@ def can_load_page(func):
             expect_loading = kwargs['expect_loading']
             del kwargs['expect_loading']
         if expect_loading:
-            self.loaded = False
+            self._reset_for_loading()
             func(self, *args, **kwargs)
             return self.wait_for_page_loaded()
         return func(self, *args, **kwargs)
@@ -97,6 +97,9 @@ class GhostWebPage(QWebPage):
     :param download_images: Indicate if the browser download or not the images
     :param create_page_callback: A method called when a popup it's opened
     :param is_popup: Boolean who indicate if the page it's a popup
+    :param max_resource_queued: Indicates witch it's the max number of resources that can be
+            saved in memory. If None then no limits are applied. If 0 then no resources are kept/
+            If the number it's > 0 then the number of resources won't be more than max_resource_queued
     """
     user_agent = ""
     removeWindowFromList = pyqtSignal(object)
@@ -109,13 +112,15 @@ class GhostWebPage(QWebPage):
     
     def __init__(self, app, network_manager, wait_timeout=20, wait_callback=None,
                 viewport_size=(800, 600), user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2',
-                log_level=30, download_images=True, create_page_callback=None, is_popup=False,
+                log_level=30, download_images=True, create_page_callback=None, is_popup=False, max_resource_queued=None,
                 *args, **kargs):
         
         super(GhostWebPage, self).__init__(parent=app)
         self._app = app
         self.pdf_engine = Pdf()
         self.http_resources = []
+        self.http_resource_page = None
+        self.max_resource_queued = max_resource_queued
         self.wait_timeout = wait_timeout
         self.wait_callback = wait_callback
         self.loaded = True
@@ -408,7 +413,14 @@ class GhostWebPage(QWebPage):
         return self.evaluate('!(typeof %s === "undefined");' %
             global_name)
     
-    
+    def _reset_for_loading(self):
+        """Prepare GhostWebPage to load a new url into
+        the Main Frame
+        """
+        self.http_resources = []
+        self.http_resource_page = None
+        self.loaded = False
+        
     def open(self, address, method='get', headers={}, auth=None,
             wait_onload_event=True, wait_for_loading=True):
         """Opens a web page.
@@ -446,13 +458,13 @@ class GhostWebPage(QWebPage):
         
         if auth is not None:
             self.network_manager.setAuthCredentials(auth[0], auth[1])
-        
+        self._reset_for_loading()
         self.main_frame.load(request, method, body)
         
-        self.loaded = False
         if not wait_for_loading:
             return self.get_loaded_page()
         return self.wait_for_page_loaded()
+    
     
     def download(self, path, address, **kwards):
         page = self.open(address, **kwards)
@@ -550,6 +562,7 @@ class GhostWebPage(QWebPage):
         
         return self.get_loaded_page()
     
+    """
     def get_loaded_page(self):
         if self.loaded and len(self._unsupported_files.keys()) == 0:
             resources = self.http_resources
@@ -561,6 +574,14 @@ class GhostWebPage(QWebPage):
                     page = resource
                     break
             return page    
+        return None
+    """
+    
+    def get_loaded_page(self):
+        if self.loaded and len(self._unsupported_files.keys()) == 0:
+            print self.http_resource_page.url
+            return self.http_resource_page            
+            
         return None
     
     def wait_for_selector(self, selector):
@@ -612,7 +633,17 @@ class GhostWebPage(QWebPage):
         self.mainFrame().addToJavaScriptWindowObject("GhostInit", self.ghostInit);
         #self.page.mainFrame().addToJavaScriptWindowObject("ghost_frame", self.page.mainFrame());
         self.evaluate_js_file(os.path.join(os.path.dirname(__file__), 'domready.js'))
-        
+    
+    
+    def _del_resource(self):
+        """Deletes one resources but checks if the HttpResource
+        it's a page.
+        """
+        for el in self.http_resource:
+            if el.url != self.main_frame.url().toString():
+                del self.http_resource[el]
+                return
+                    
     def _request_ended(self, reply):
         """Adds an HttpResource object to http_resources.
 
@@ -623,13 +654,27 @@ class GhostWebPage(QWebPage):
             self._insert_dom_ready_code()
         
         content = None
+        is_unsuported_content = unicode(reply.url()) in self._unsupported_files
         if unicode(reply.url()) in self._unsupported_files:
             del self._unsupported_files[unicode(reply.url())]
             content = reply.readAll()
         
         if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute):
             cache = self.network_manager.cache()
-            self.http_resources.append(HttpResource(reply, cache, content))
+            http_resource = HttpResource(reply, cache, content)
+            
+            if self.http_resource_page is None:
+                self.http_resource_page = http_resource
+            
+            if self.max_resource_queued is None or self.max_resource_queued > 0:
+                self.http_resources.append(http_resource)
+            
+            
+            if self.max_resource_queued is not None and \
+                len(self.http_resources) > self.max_resource_queued:
+                self.http_resources.pop(0)
+                #self._del_resources()
+            
             
     def _unsupported_content(self, reply):
         """Adds an HttpResource object to http_resources with unsupported
@@ -738,9 +783,11 @@ class Ghost(object):
     :param download_images: Indicate if the browser download or not the images
     :param prevent_download: A List of extensions of the files that you want
         to prevent from downloading
-    :param individual_cookies: A boolean that indicates if every page created has
-        to share the same cookie jar. If it's True every page will have a different
-        cookie jar and a different cache directory. The cache directory will be called
+    :param share_cookies: A boolean that indicates if every page created has
+        to share the same cookie jar. If False every page will have a different
+        cookie jar 
+    :param share_cache: A boolean that indicates if every page created has
+        to share the same cache directory. If False, cache directory will be called
         cache_dir + randomint in order to separate the directories. 
     """
     _app = None
@@ -748,7 +795,7 @@ class Ghost(object):
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
-            download_images=True, prevent_download=[], individual_cookies=False):
+            download_images=True, prevent_download=[], share_cookies=True, share_cache=True):
         
         self.user_agent = user_agent
         self.wait_timeout = wait_timeout
@@ -756,7 +803,14 @@ class Ghost(object):
         self.viewport_size = viewport_size
         self.log_level = log_level
         self.display = display
-        self.individual_cookies = individual_cookies
+        self.share_cookies = share_cookies
+        self.share_cache = share_cache
+        self.cache_dir = cache_dir
+        self.cache_size = cache_size
+        self.prevent_download = prevent_download
+        self.network_managers = []
+        self.current_page = None
+        self._pages = []
         
         if not sys.platform.startswith('win') and not 'DISPLAY' in os.environ\
                 and not hasattr(Ghost, 'xvfb'):
@@ -773,19 +827,6 @@ class Ghost(object):
         
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
         QtWebKit.QWebSettings.setObjectCacheCapacities(0, 0, 0)
-        
-        self.cache_dir = cache_dir
-        self.cache_size = cache_size
-        self.prevent_download = prevent_download
-        self.network_manager = NetworkAccessManager(cache_dir=cache_dir, cache_size=cache_size,
-                                            prevent_download=prevent_download)
-        self.cache = self.network_manager.cache()
-        self.network_managers = []
-        #self.page.setNetworkAccessManager(self.manager)
-        
-        self.current_page = None
-
-        self._pages = []
         
         logger.setLevel(log_level)
 
@@ -822,7 +863,7 @@ class Ghost(object):
     @pyqtSlot(object)    
     def _remove_page(self, page):
         # TODO see what happends when the page has a dependency (popups)
-        if self.individual_cookies:
+        if not self.share_cookies:
             nm = page.networkAccessManager()
             
             if nm in self.network_managers:
@@ -834,29 +875,35 @@ class Ghost(object):
             del page
         
     
-    def create_page(self, wait_timeout=20, wait_callback=None, is_popup=False):
+    def create_page(self, wait_timeout=20, wait_callback=None, is_popup=False,
+                    max_resource_queued=None):
         """Create a new GhostWebPage
         :param wait_timeout: The timeout used when we want to load a new url.
         :param wait_callback: An optional callable that is periodically
         executed until Ghost stops waiting.
-        :param is_popup: Indicated if the QWebPage it's a popup
+        :param is_popup: Indicates if the QWebPage it's a popup
+        :param max_resource_queued: Indicates witch it's the max number of resources that can be
+            saved in memory. If None then no limits are applied. If 0 then no resources are kept/
+            If the number it's > 0 then the number of resources won't be more than max_resource_queued
         """     
-
-        j = random.randint(0, 100000000)
-        if self.individual_cookies or len(self.network_managers) == 0:
-            network_manager = NetworkAccessManager(cache_dir=self.cache_dir + str(j), cache_size=self.cache_size,
-                                            prevent_download=self.prevent_download)
-            
+        cache_name = self.cache_dir if self.share_cache else self.cache_dir + str(random.randint(0, 100000000))
+        network_manager = NetworkAccessManager(cache_dir=cache_name, cache_size=self.cache_size,
+                    prevent_download=self.prevent_download)
+        if not self.share_cookies or len(self.network_managers) == 0:
             cookie_jar = QNetworkCookieJar()
             network_manager.setCookieJar(cookie_jar)
-            self.network_managers.append(network_manager)
+            self.cookie_jar = cookie_jar
         else:
-            network_manager = self.network_managers[0]
+            network_manager.setCookieJar(self.cookie_jar)
+        
+        if self.share_cookies:
+            self.cookie_jar.setParent(None)
+        self.network_managers.append(network_manager)
         
         page = GhostWebPage(app=Ghost._app, network_manager=network_manager, wait_timeout=wait_timeout,
                 wait_callback=wait_callback, viewport_size=self.viewport_size,
                 user_agent=self.user_agent, log_level=self.log_level, create_page_callback=self.create_page,
-                is_popup=is_popup)
+                is_popup=is_popup, max_resource_queued=max_resource_queued)
         
         page.removeWindowFromList.connect(self._remove_page)
         
@@ -881,7 +928,9 @@ class Ghost(object):
             del n
         for page in self._pages:
             del page
-        
+        if self.share_cookies:
+            del self.cookie_jar
+            
         if hasattr(self, 'xvfb'):
             self.xvfb.terminate()
 
