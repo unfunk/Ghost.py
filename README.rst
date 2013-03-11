@@ -29,16 +29,18 @@ If you want to see the changes please referer to the following wiki:
 
 History
 -------
-10/03/2013
- - Big Restructuration in Ghost.py Core [More info] (https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py)
- - Added support for multiple tabs. [More info] (https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py) - [Example] (https://github.com/carrerasrodrigo/Ghost.py/wiki/Example----Multiple-Tabs)
- - Added a solution for concurrent tabs (Black Pearl Server) [More info] (https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py)
+**10/03/2013**
+ - Big Restructuration in Ghost.py Core `More info <https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py>`_
+ - Added support for multiple tabs. `More info <https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py>`_ -  `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py>`_
+ - Added a solution for concurrent tabs (Black Pearl Server) `More info <https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py>`_
 
-Past changes
+**Past changes**
+
 - Support for Popups
-- Support for Fast Open [Example] (https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Fast-Open)
-- Sopport for selective download [Example] (https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Selective-Download)
-- Support for cache [Example] (https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Cache)
+- Support for Fast Open `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Fast-Open>`_
+
+- Sopport for selective download `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Selective-Download>`_
+- Support for cache `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Cache>`_
 - Added new method to switch beetween frames.
 - Added the option to capture an image from the webpage an save it into a PDF file.
 - Added support for connection via proxy
