@@ -16,7 +16,7 @@ Example
 
 Full Documentation
 ------------------
-The full documentation can be find in the following link 
+The full documentation can be found in the following link 
 
 * http://carrerasrodrigo.github.com/Ghost.py/
 
