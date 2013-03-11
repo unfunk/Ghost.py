@@ -764,9 +764,6 @@ class Ghost(object):
     :param cache_dir: a directory where Ghost is going to put the cache
     :param cache_size: the Size of the cache in MB. If it's 0 the
         cache it's automatically disabled. 
-    :param download_images: Indicate if the browser download or not the images
-    :param prevent_download: A List of extensions of the files that you want
-        to prevent from downloading
     :param share_cookies: A boolean that indicates if every page created has
         to share the same cookie jar. If False every page will have a different
         cookie jar 
@@ -779,7 +776,7 @@ class Ghost(object):
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
-            download_images=True, prevent_download=[], share_cookies=True, share_cache=True):
+            share_cookies=True, share_cache=True):
         
         self.user_agent = user_agent
         self.wait_timeout = wait_timeout
@@ -791,7 +788,6 @@ class Ghost(object):
         self.share_cache = share_cache
         self.cache_dir = cache_dir
         self.cache_size = cache_size
-        self.prevent_download = prevent_download
         self.network_managers = []
         self.current_page = None
         self._pages = []
@@ -860,7 +856,8 @@ class Ghost(object):
         
     
     def create_page(self, wait_timeout=20, wait_callback=None, is_popup=False,
-                    max_resource_queued=None):
+                    max_resource_queued=None, download_images=True,
+                    prevent_download=[]):
         """Create a new GhostWebPage
         :param wait_timeout: The timeout used when we want to load a new url.
         :param wait_callback: An optional callable that is periodically
@@ -871,10 +868,13 @@ class Ghost(object):
         are applied. If 0 then no resources are kept. If the number
         it's > 0 then the number of resources won't be more than
         max_resource_queued
+        :param download_images: Indicate if the browser download or not the images
+        :param prevent_download: A List of extensions of the files that you want
+        to prevent from downloading
         """     
         cache_name = self.cache_dir if self.share_cache else self.cache_dir + str(random.randint(0, 100000000))
         network_manager = NetworkAccessManager(cache_dir=cache_name, cache_size=self.cache_size,
-                    prevent_download=self.prevent_download)
+                    prevent_download=prevent_download)
         if not self.share_cookies or len(self.network_managers) == 0:
             cookie_jar = QNetworkCookieJar()
             network_manager.setCookieJar(cookie_jar)
@@ -889,7 +889,8 @@ class Ghost(object):
         page = GhostWebPage(app=Ghost._app, network_manager=network_manager, wait_timeout=wait_timeout,
                 wait_callback=wait_callback, viewport_size=self.viewport_size,
                 user_agent=self.user_agent, log_level=self.log_level, create_page_callback=self.create_page,
-                is_popup=is_popup, max_resource_queued=max_resource_queued)
+                is_popup=is_popup, max_resource_queued=max_resource_queued,
+                download_images=download_images)
         
         page.removeWindowFromList.connect(self._remove_page)
         
