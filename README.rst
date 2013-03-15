@@ -30,7 +30,8 @@ If you want to see the changes please referer to the following wiki:
 History
 -------
 **15/03/2013**
- - Added two methods in to GhostWebPage, load_cookie and save_cookie. 
+ - Added two methods in to GhostWebPage, load_cookie and save_cookie.
+ - Added support for java and plugins based on commit https://github.com/jeanphix/Ghost.py/commit/18686b654e02e0406bd85a2c09cd938a07c5303d
  - Fix test cases. Removed unused methods. 
 
 **10/03/2013**
