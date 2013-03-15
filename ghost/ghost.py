@@ -100,6 +100,8 @@ class GhostWebPage(QWebPage):
     :param user_agent: The default User-Agent header.
     :param log_level: The optional logging level.
     :param download_images: Indicate if the browser download or not the images
+    :param plugins_enabled: Enable plugins (like Flash).
+    :param java_enabled: Enable Java JRE.
     :param create_page_callback: A method called when a popup it's opened
     :param is_popup: Boolean who indicate if the page it's a popup
     :param max_resource_queued: Indicates witch it's the max number of resources that can be
@@ -117,7 +119,9 @@ class GhostWebPage(QWebPage):
     
     def __init__(self, app, network_manager, wait_timeout=20, wait_callback=None,
                 viewport_size=(800, 600), user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2',
-                log_level=30, download_images=True, create_page_callback=None, is_popup=False, max_resource_queued=None,
+                log_level=30, download_images=True, plugins_enabled=False,
+                java_enabled=False, create_page_callback=None,
+                is_popup=False, max_resource_queued=None,
                 *args, **kargs):
         
         super(GhostWebPage, self).__init__(parent=app)
@@ -138,7 +142,9 @@ class GhostWebPage(QWebPage):
         self.settings().setAttribute(QtWebKit.QWebSettings.AutoLoadImages, download_images)
         self.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
         self.settings().setAttribute(QtWebKit.QWebSettings.JavascriptCanOpenWindows, True)
-        
+        self.settings().setAttribute(QtWebKit.QWebSettings.PluginsEnabled, plugins_enabled)
+        self.settings().setAttribute(QtWebKit.QWebSettings.JavaEnabled, java_enabled)
+
         self.set_viewport_size(*viewport_size)
 
         # Page signals
@@ -841,13 +847,15 @@ class Ghost(object):
         cookie jar 
     :param share_cache: A boolean that indicates if every page created has
         to share the same cache directory. If False, cache directory will be called
-        cache_dir + randomint in order to separate the directories. 
+        cache_dir + randomint in order to separate the directories.
+    :param plugin_path: Array with paths to plugin directories (default ['/usr/lib/mozilla/plugins'])
     """
     _app = None
     
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=10,
+            plugin_path=['/usr/lib/mozilla/plugins',],
             share_cookies=True, share_cache=True):
         
         self.user_agent = user_agent
@@ -876,7 +884,8 @@ class Ghost(object):
         self.display = display
         if not Ghost._app:
             Ghost._app = QApplication.instance() or QApplication(['ghost'])
-        
+        for p in plugin_path:
+            Ghost._app.addLibraryPath(p)
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
         QtWebKit.QWebSettings.setObjectCacheCapacities(0, 0, 0)
         
