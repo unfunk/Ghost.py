@@ -29,6 +29,10 @@ If you want to see the changes please referer to the following wiki:
 
 History
 -------
+**15/03/2013**
+ - Added two methods in to GhostWebPage, load_cookie and save_cookie. 
+ - Fix test cases. Removed unused methods. 
+
 **10/03/2013**
  - Big Restructuration in Ghost.py Core `More info <https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py>`_
  - Added support for multiple tabs. `More info <https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py>`_ -  `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/About-the-changes-made-to-Ghost.py>`_
@@ -42,6 +46,6 @@ History
 - Sopport for selective download `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Selective-Download>`_
 - Support for cache `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/Example---Cache>`_
 - Added new method to switch beetween frames.
-- Added the option to capture an image from the webpage an save it into a PDF file.
+- Added the option to capture an image from the webpage and save it into a PDF file `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/Examples---Useful-Examples>`_
 - Added support for connection via proxy
-- Added a "download" method that save the webpage content into a file.
+- Added a "download" method that save the webpage content into a file `Example <https://github.com/carrerasrodrigo/Ghost.py/wiki/Examples---Useful-Examples>`_
