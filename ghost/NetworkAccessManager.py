@@ -37,11 +37,11 @@ class NetworkAccessManager(QNetworkAccessManager):
         self._prevent_download = kwargs.pop("prevent_download", [])
         
         super(NetworkAccessManager, self).__init__(*args, **kwargs)
-    
-        cache = QNetworkDiskCache()
-        cache.setCacheDirectory(cache_dir)
-        cache.setMaximumCacheSize(cache_size * 1024 * 1024)
-        self.setCache(cache)
+        if cache_size > 0:
+            cache = QNetworkDiskCache()
+            cache.setCacheDirectory(cache_dir)
+            cache.setMaximumCacheSize(cache_size * 1024 * 1024)
+            self.setCache(cache)
         
         # Manages the authentication for the proxy
         self.proxyAuthenticationRequired.connect(self._authenticateProxy)

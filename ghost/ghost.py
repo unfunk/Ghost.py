@@ -618,16 +618,6 @@ class GhostWebPage(QWebPage):
         #self.page.mainFrame().addToJavaScriptWindowObject("ghost_frame", self.page.mainFrame());
         self.evaluate_js_file(os.path.join(os.path.dirname(__file__), 'domready.js'))
     
-    
-    def _del_resource(self):
-        """Deletes one resources but checks if the HttpResource
-        it's a page.
-        """
-        for el in self.http_resource:
-            if el.url != self.main_frame.url().toString():
-                del self.http_resource[el]
-                return
-                    
     def _request_ended(self, reply):
         """Adds an HttpResource object to http_resources.
 
@@ -638,7 +628,6 @@ class GhostWebPage(QWebPage):
             self._insert_dom_ready_code()
         
         content = None
-        is_unsuported_content = unicode(reply.url()) in self._unsupported_files
         if unicode(reply.url()) in self._unsupported_files:
             del self._unsupported_files[unicode(reply.url())]
             content = reply.readAll()
@@ -718,7 +707,7 @@ class HttpResource(object):
         self.url = reply.url().toString()
         self.content = content
         # TODO: in some request reply.attribute(QNetworkRequest.SourceIsFromCacheAttribute)
-        # returns None. I'm not sure why is that happening. 
+        # returns None. I'm not sure why that is happening.
         is_from_cache = reply.attribute(QNetworkRequest.SourceIsFromCacheAttribute)
         self.is_from_cache = False if is_from_cache is None else is_from_cache
         if self.content is None:
@@ -730,6 +719,7 @@ class HttpResource(object):
                     self.content = unicode(content)
                 except UnicodeDecodeError:
                     self.content = content
+                
         self.http_status = reply.attribute(
             QNetworkRequest.HttpStatusCodeAttribute)
         Logger.log("Resource loaded: %s %s" % (self.url, self.http_status))
@@ -775,7 +765,7 @@ class Ghost(object):
     
     def __init__(self, user_agent=default_user_agent, wait_timeout=20,
             wait_callback=None, log_level=logging.WARNING, display=False,
-            viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=0,
+            viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=10,
             share_cookies=True, share_cache=True):
         
         self.user_agent = user_agent
