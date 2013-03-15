@@ -11,3 +11,16 @@ dist
 *.komodoproject
 tests_scripts
 ghost/ghost
+tests/testcookie.txt
+
+.gitignore
+
+.gitignore
+
+ghost/docs/_build/doctrees/environment.pickle
+
+ghost/docs/_build/doctrees/index.doctree
+
+ghost/docs/_build/html/genindex.html
+
+ghost/docs/_build/html/objects.inv
