@@ -141,7 +141,7 @@ experience faster than ever. Let&#8217;s see another example:</p>
 </div>
 <span class="target" id="module-ghost"></span><dl class="class">
 <dt id="ghost.Ghost">
-<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">Ghost</tt><big>(</big><em>user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML</em>, <em>like Gecko) Chrome/15.0.874.121 Safari/535.2'</em>, <em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>log_level=30</em>, <em>display=False</em>, <em>viewport_size=(800</em>, <em>600)</em>, <em>cache_dir='/tmp/ghost.py'</em>, <em>cache_size=0</em>, <em>download_images=True</em>, <em>prevent_download=</em><span class="optional">[</span><span class="optional">]</span>, <em>share_cookies=True</em>, <em>share_cache=True</em><big>)</big><a class="headerlink" href="#ghost.Ghost" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">ghost.</tt><tt class="descname">Ghost</tt><big>(</big><em>user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 (KHTML</em>, <em>like Gecko) Chrome/15.0.874.121 Safari/535.2'</em>, <em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>log_level=30</em>, <em>display=False</em>, <em>viewport_size=(800</em>, <em>600)</em>, <em>cache_dir='/tmp/ghost.py'</em>, <em>cache_size=10</em>, <em>share_cookies=True</em>, <em>share_cache=True</em><big>)</big><a class="headerlink" href="#ghost.Ghost" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ghost manages multiple QWebPage&#8217;s.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -158,9 +158,6 @@ executed until Ghost stops waiting.</li>
 <li><strong>cache_dir</strong> &#8211; a directory where Ghost is going to put the cache</li>
 <li><strong>cache_size</strong> &#8211; the Size of the cache in MB. If it&#8217;s 0 the
 cache it&#8217;s automatically disabled.</li>
-<li><strong>download_images</strong> &#8211; Indicate if the browser download or not the images</li>
-<li><strong>prevent_download</strong> &#8211; A List of extensions of the files that you want
-to prevent from downloading</li>
 <li><strong>share_cookies</strong> &#8211; A boolean that indicates if every page created has
 to share the same cookie jar. If False every page will have a different
 cookie jar</li>
@@ -174,7 +171,7 @@ cache_dir + randomint in order to separate the directories.</li>
 </table>
 <dl class="method">
 <dt id="ghost.Ghost.create_page">
-<tt class="descname">create_page</tt><big>(</big><em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>is_popup=False</em>, <em>max_resource_queued=None</em><big>)</big><a class="headerlink" href="#ghost.Ghost.create_page" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">create_page</tt><big>(</big><em>wait_timeout=20</em>, <em>wait_callback=None</em>, <em>is_popup=False</em>, <em>max_resource_queued=None</em>, <em>download_images=True</em>, <em>prevent_download=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#ghost.Ghost.create_page" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new GhostWebPage
 :param wait_timeout: The timeout used when we want to load a new url.
 :param wait_callback: An optional callable that is periodically
@@ -184,7 +181,10 @@ executed until Ghost stops waiting.
 resources that can be saved in memory. If None then no limits
 are applied. If 0 then no resources are kept. If the number
 it&#8217;s &gt; 0 then the number of resources won&#8217;t be more than
-max_resource_queued</p>
+max_resource_queued
+:param download_images: Indicate if the browser download or not the images
+:param prevent_download: A List of extensions of the files that you want
+to prevent from downloading</p>
 </dd></dl>
 
 <dl class="method">
@@ -487,6 +487,24 @@ value.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="ghost.GhostWebPage.load_cookies">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">load_cookies</tt><big>(</big><em>cookie_storage</em>, <em>keep_old=False</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.load_cookies" title="Permalink to this definition">¶</a></dt>
+<dd><p>load from cookielib&#8217;s CookieJar or Set-Cookie3 format text file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cookie_storage</strong> &#8211; file location string on disk or CookieJar instance.</li>
+<li><strong>keep_old</strong> &#8211; Don&#8217;t reset, keep cookies not overriden.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="ghost.GhostWebPage.open">
 <tt class="descclassname">GhostWebPage.</tt><tt class="descname">open</tt><big>(</big><em>address</em>, <em>method='get'</em>, <em>headers={}</em>, <em>auth=None</em>, <em>wait_onload_event=True</em>, <em>wait_for_loading=True</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opens a web page.</p>
@@ -540,6 +558,20 @@ isn&#8217;t valid if wait_for_loading is False.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selector</strong> &#8211; The targeted element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ghost.GhostWebPage.save_cookies">
+<tt class="descclassname">GhostWebPage.</tt><tt class="descname">save_cookies</tt><big>(</big><em>cookie_storage</em><big>)</big><a class="headerlink" href="#ghost.GhostWebPage.save_cookies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save to cookielib&#8217;s CookieJar or Set-Cookie3 format text file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cookie_storage</strong> &#8211; file location string or CookieJar instance.</td>
 </tr>
 </tbody>
 </table>

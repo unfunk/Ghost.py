@@ -9,6 +9,7 @@ import subprocess
 import random
 
 from functools import wraps
+from cookielib import Cookie, LWPCookieJar
 try:
     import sip
     sip.setapi('QVariant', 2)
@@ -16,16 +17,20 @@ try:
     from PyQt4 import QtWebKit, QtCore
     from PyQt4.QtWebKit import QWebPage
     from PyQt4.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
-                                QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
-    from PyQt4.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
+                                QNetworkCookieJar, QNetworkDiskCache, \
+                                QNetworkReply, QNetworkCookie
+    from PyQt4.QtCore import QSize, QByteArray, QUrl, QDateTime, \
+                                pyqtSlot, pyqtSignal, SIGNAL
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
     try:
         from PySide import QtWebKit, QtCore
         from PySide.QtWebKit import QWebPage
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
-                                    QNetworkCookieJar, QNetworkDiskCache, QNetworkReply
-        from PySide.QtCore import QSize, QByteArray, QUrl, pyqtSlot, pyqtSignal, SIGNAL
+                                    QNetworkCookieJar, QNetworkDiskCache, \
+                                    QNetworkReply, QNetworkCookie
+        from PySide.QtCore import QSize, QByteArray, QUrl, QDateTime, \
+                                    pyqtSlot, pyqtSignal, SIGNAL
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
@@ -699,6 +704,83 @@ class GhostWebPage(QWebPage):
     def delete_cache(self):
         self.network_manager.cache().clear()
         
+    def load_cookies( self, cookie_storage, keep_old=False ):
+        """load from cookielib's CookieJar or Set-Cookie3 format text file.
+
+        :param cookie_storage: file location string on disk or CookieJar instance.
+        :param keep_old: Don't reset, keep cookies not overriden.
+        """
+        def toQtCookieJar(pyCookieJar, qtCookieJar):
+            all_cookies = qtCookieJar.cookies if keep_old else []
+            for pc in pyCookieJar:
+                qc = toQtCookie(pc)
+                all_cookies.append(qc)
+            qtCookieJar.setAllCookies(all_cookies)
+
+        def toQtCookie(pyCookie):
+            qc = QNetworkCookie(pyCookie.name, pyCookie.value)
+            qc.setSecure(pyCookie.secure)
+            if pyCookie.path_specified:
+                qc.setPath(pyCookie.path)
+            if pyCookie.domain != "" :
+                qc.setDomain(pyCookie.domain)
+            if pyCookie.expires != 0:
+                t = QDateTime()
+                t.setTime_t(pyCookie.expires)
+                qc.setExpirationDate(t)
+            # not yet handled(maybe less useful):
+            #   py cookie.rest / QNetworkCookie.setHttpOnly()
+            return qc
+
+        if cookie_storage.__class__.__name__ == 'str':
+            cj = LWPCookieJar(cookie_storage)
+            cj.load()
+            toQtCookieJar(cj, self.network_manager.cookieJar())
+        elif cookie_storage.__class__.__name__.endswith('CookieJar') :
+            toQtCookieJar(cookie_storage, self.network_manager.cookieJar())
+        else:
+            raise ValueError, 'unsupported cookie_storage type.'
+        
+    
+    def save_cookies(self, cookie_storage):
+        """Save to cookielib's CookieJar or Set-Cookie3 format text file.
+
+        :param cookie_storage: file location string or CookieJar instance.
+        """
+        def toPyCookieJar(qtCookieJar, pyCookieJar):
+            for c in qtCookieJar.allCookies():
+                pyCookieJar.set_cookie(toPyCookie(c))
+
+        def toPyCookie(qtCookie):
+            port = None
+            port_specified = False
+            secure = qtCookie.isSecure()
+            name = str(qtCookie.name())
+            value = str(qtCookie.value())
+            v = str(qtCookie.path())
+            path_specified = bool( v != "" )
+            path = v if path_specified else None
+            v = str(qtCookie.domain())
+            domain_specified = bool( v != "" )
+            domain = v
+            domain_initial_dot = v.startswith('.') if domain_specified else None
+            v = long(qtCookie.expirationDate().toTime_t())
+            # Long type boundary on 32bit platfroms; avoid ValueError
+            expires = 2147483647 if v > 2147483647 else v
+            rest = {}
+            discard = False
+            return Cookie(0, name, value, port, port_specified, domain,
+                domain_specified, domain_initial_dot, path, path_specified,
+                secure, expires, discard, None, None, rest)
+
+        if cookie_storage.__class__.__name__ == 'str':
+            cj = LWPCookieJar(cookie_storage)
+            toPyCookieJar(self.network_manager.cookieJar(), cj)
+            cj.save()
+        elif cookie_storage.__class__.__name__.endswith('CookieJar') :
+            toPyCookieJar(self.network_manager.cookieJar(), cookie_storage)
+        else:
+            raise ValueError, 'unsupported cookie_storage type.'
         
 class HttpResource(object):
     """Represents an HTTP resource.

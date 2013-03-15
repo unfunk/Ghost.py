@@ -59,13 +59,13 @@ class BaseGhostTestCase(TestCase):
             cls.page, name = cls.ghost.create_page()
             
             cls.ghost_prevent_download = Ghost(display=cls.display,
-                prevent_download=["jpg"],
                 wait_timeout=cls.wait_timeout,
                 viewport_size=cls.viewport_size,
                 log_level=cls.log_level,
                 cache_dir="/tmp/ghost.py",
                 cache_size=10)
-            cls.ghost_prevent_download_page, name = cls.ghost_prevent_download.create_page()
+            cls.ghost_prevent_download_page, name = \
+                cls.ghost_prevent_download.create_page(prevent_download=["jpg"])
             
         return super(BaseGhostTestCase, cls).__new__(cls, *args, **kwargs)
 
