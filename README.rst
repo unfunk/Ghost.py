@@ -9,9 +9,10 @@ Example
 ::
 
     from ghost import Ghost
-    ghost = Ghost()
-    page, page_name = ghost.open("http://jeanphi.fr")
-    assert page.http_status==200 and 'jeanphix' in ghost.content
+    gh = Ghost()
+    gpage, name = gh.create_page()
+    gpage.open("http://www.google.com")
+    gpage.capture_to("/tmp/google.png")
 
 
 Full Documentation
