@@ -302,6 +302,11 @@ class GhostWebPage(QWebPage):
             painter.end()
             image = image.copy(x1, y1, w, h)
         else:
+            self.currentFrame().setScrollBarPolicy(QtCore.Qt.Vertical,
+                                QtCore.Qt.ScrollBarAlwaysOff)
+            self.currentFrame().setScrollBarPolicy(QtCore.Qt.Horizontal,
+                                QtCore.Qt.ScrollBarAlwaysOff)
+            self.setViewportSize(self.currentFrame().contentsSize())
             image = QImage(self.viewportSize(), format)
             painter = QPainter(image)
             self.currentFrame().render(painter)
