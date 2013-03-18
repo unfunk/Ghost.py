@@ -9,7 +9,7 @@ try:
                                 QNetworkDiskCache, QNetworkProxy
 except ImportError:
     try:
-        from PyQt4.QtCore import QUrl
+        from PySide.QtCore import QUrl
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                 QNetworkDiskCache, QNetworkProxy
     except ImportError:

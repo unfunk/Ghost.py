@@ -20,7 +20,7 @@ try:
                                 QNetworkCookieJar, QNetworkDiskCache, \
                                 QNetworkReply, QNetworkCookie
     from PyQt4.QtCore import QSize, QByteArray, QUrl, QDateTime, \
-                                pyqtSlot, pyqtSignal, SIGNAL
+                                 SIGNAL
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
     try:
@@ -29,8 +29,10 @@ except ImportError:
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                     QNetworkCookieJar, QNetworkDiskCache, \
                                     QNetworkReply, QNetworkCookie
-        from PySide.QtCore import QSize, QByteArray, QUrl, QDateTime, \
-                                    pyqtSlot, pyqtSignal, SIGNAL
+        from PySide.QtCore import QSize, QByteArray, QUrl, QDateTime, SIGNAL
+        from PySide.QtCore import Slot as pyqtSlot
+        from PySide.QtCore import Signal as pyqtSignal,
+
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
         raise Exception("Ghost.py requires PySide or PyQt")
