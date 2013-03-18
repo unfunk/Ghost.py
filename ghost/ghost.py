@@ -31,7 +31,7 @@ except ImportError:
                                     QNetworkReply, QNetworkCookie
         from PySide.QtCore import QSize, QByteArray, QUrl, QDateTime, SIGNAL
         from PySide.QtCore import Slot as pyqtSlot
-        from PySide.QtCore import Signal as pyqtSignal,
+        from PySide.QtCore import Signal as pyqtSignal
 
         from PySide.QtGui import QApplication, QImage, QPainter
     except ImportError:
