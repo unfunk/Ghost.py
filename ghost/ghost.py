@@ -20,7 +20,7 @@ try:
                                 QNetworkCookieJar, QNetworkDiskCache, \
                                 QNetworkReply, QNetworkCookie
     from PyQt4.QtCore import QSize, QByteArray, QUrl, QDateTime, \
-                                 SIGNAL
+                                 SIGNAL, pyqtSlot, pyqtSignal
     from PyQt4.QtGui import QApplication, QImage, QPainter
 except ImportError:
     try:
@@ -830,7 +830,7 @@ class GhostInit(QtCore.QObject):
     """
     dom_is_ready = pyqtSignal(bool)
     
-    @QtCore.pyqtSlot()  
+    @pyqtSlot()  
     def is_ready(self):
         Logger.log("Firing Dom Ready Signal")
         self.dom_is_ready.emit(True)

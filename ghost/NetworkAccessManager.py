@@ -38,7 +38,7 @@ class NetworkAccessManager(QNetworkAccessManager):
         
         super(NetworkAccessManager, self).__init__(*args, **kwargs)
         if cache_size > 0:
-            cache = QNetworkDiskCache()
+            cache = QNetworkDiskCache(self)
             cache.setCacheDirectory(cache_dir)
             cache.setMaximumCacheSize(cache_size * 1024 * 1024)
             self.setCache(cache)
