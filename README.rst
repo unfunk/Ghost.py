@@ -30,6 +30,9 @@ If you want to see the changes please referer to the following wiki:
 
 History
 -------
+**21/03/2013**
+ - Patch that solve bug #12 for PySide https://github.com/carrerasrodrigo/Ghost.py/issues/12
+
 **15/03/2013**
  - Added two methods in to GhostWebPage, load_cookie and save_cookie.
  - Added support for java and plugins based on commit https://github.com/jeanphix/Ghost.py/commit/18686b654e02e0406bd85a2c09cd938a07c5303d (Thanks to @jansel)
