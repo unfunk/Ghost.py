@@ -20,8 +20,11 @@ try:
                                 QNetworkCookieJar, QNetworkDiskCache, \
                                 QNetworkReply, QNetworkCookie
     from PyQt4.QtCore import QSize, QByteArray, QUrl, QDateTime, \
-                                 SIGNAL, pyqtSlot, pyqtSignal
+                                SIGNAL, pyqtSlot, pyqtSignal, \
+                                QtCriticalMsg, QtDebugMsg, QtFatalMsg, \
+                                QtWarningMsg, qInstallMsgHandler
     from PyQt4.QtGui import QApplication, QImage, QPainter
+    
 except ImportError:
     try:
         from PySide import QtWebKit, QtCore
@@ -29,7 +32,9 @@ except ImportError:
         from PySide.QtNetwork import QNetworkRequest, QNetworkAccessManager,\
                                     QNetworkCookieJar, QNetworkDiskCache, \
                                     QNetworkReply, QNetworkCookie
-        from PySide.QtCore import QSize, QByteArray, QUrl, QDateTime, SIGNAL
+        from PySide.QtCore import QSize, QByteArray, QUrl, QDateTime, SIGNAL, \
+                                QtCriticalMsg, QtDebugMsg, QtFatalMsg, \
+                                QtWarningMsg, qInstallMsgHandler
         from PySide.QtCore import Slot as pyqtSlot
         from PySide.QtCore import Signal as pyqtSignal
 
@@ -53,6 +58,26 @@ class Logger(logging.Logger):
         if not hasattr(logger, level):
             raise Exception('invalid log level')
         getattr(logger, level)("%s: %s", sender, message)
+
+
+class QTMessageProxy(object):
+    """
+        Redirects messages from QT Framework to python logging
+    """
+    def __init__(self, debug=False):
+        self.debug = debug
+
+    def __call__(self, msgType, msg):
+        if msgType == QtDebugMsg and self.debug:
+            Logger.log(msg, sender='QT', level='debug')
+        elif msgType == QtWarningMsg and self.debug:
+            Logger.log(msg, sender='QT', level='warning')
+        elif msgType == QtCriticalMsg:
+            Logger.log(msg, sender='QT', level='critical')
+        elif msgType == QtFatalMsg:
+            Logger.log(msg, sender='QT', level='fatal')
+        elif self.debug:
+            Logger.log(msg, sender='QT', level='info')
 
         
 def can_load_page(func):
@@ -856,6 +881,7 @@ class Ghost(object):
         to share the same cache directory. If False, cache directory will be called
         cache_dir + randomint in order to separate the directories.
     :param plugin_path: Array with paths to plugin directories (default ['/usr/lib/mozilla/plugins'])
+    :param qt_debug: Redirect QT Framework messages to python logging
     """
     _app = None
     
@@ -863,7 +889,7 @@ class Ghost(object):
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py', cache_size=10,
             plugin_path=['/usr/lib/mozilla/plugins',],
-            share_cookies=True, share_cache=True):
+            share_cookies=True, share_cache=True, qt_debug=False):
         
         self.user_agent = user_agent
         self.wait_timeout = wait_timeout
@@ -891,6 +917,7 @@ class Ghost(object):
         self.display = display
         if not Ghost._app:
             Ghost._app = QApplication.instance() or QApplication(['ghost'])
+            qInstallMsgHandler(QTMessageProxy(qt_debug))
         for p in plugin_path:
             Ghost._app.addLibraryPath(p)
         QtWebKit.QWebSettings.setMaximumPagesInCache(0)
@@ -959,7 +986,7 @@ class Ghost(object):
         :param download_images: Indicate if the browser download or not the images
         :param prevent_download: A List of extensions of the files that you want
         to prevent from downloading
-        """     
+        """
         cache_name = self.cache_dir if self.share_cache else self.cache_dir + str(random.randint(0, 100000000))
         network_manager = NetworkAccessManager(cache_dir=cache_name, cache_size=self.cache_size,
                     prevent_download=prevent_download)
