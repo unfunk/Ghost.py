@@ -30,6 +30,16 @@ If you want to see the changes please referer to the following wiki:
 
 History
 -------
+**24/03/2013**
+ - Added the option to redirect Qt Framework messages to python logging system. Based on pull request https://github.com/jeanphix/Ghost.py/pull/70 . Thanks to @asdil12
+::
+
+    #How to enable debug messages (QT included)
+    import logging
+    gh = Ghost(qt_debug=True, log_level=logging.DEBUG)
+    
+    ... Do Something else with ghost
+ 
 **21/03/2013**
  - Patch that solve bug #12 for PySide https://github.com/carrerasrodrigo/Ghost.py/issues/12
 
