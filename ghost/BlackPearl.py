@@ -106,7 +106,7 @@ class PirateRequest:
         
 class BlackPearl():
     
-    def __init__(self, ghost, pirateClass, host='127.0.0.1' port=8000, request_life=300):
+    def __init__(self, ghost, pirateClass, host='127.0.0.1', port=8000, request_life=300):
         """This is a Server that wake up Ghost instances.
         :param pirateClass: The class that we want to instanciate to do the work
         :param port: The port where the server will run
